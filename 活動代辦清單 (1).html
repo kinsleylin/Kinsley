@@ -1,0 +1,644 @@
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0f2019;
+    --bg2:#173229;
+    --bg-line:#2a4a3c;
+    --paper:#f6efdd;
+    --paper-line:#e4d7b8;
+    --gold:#c99b3f;
+    --gold-dim:#8f6b28;
+    --coral:#d9763f;
+    --ink:#241d16;
+    --ink-soft:#6b5f47;
+    --text-light:#ecf2ea;
+    --muted:#9db8a8;
+    --green:#4f7a3c;
+    --green-bg:#e3ead9;
+    --amber-bg:#f3e6c4;
+    --amber-ink:#7a5e12;
+    --orange-bg:#f2ded0;
+    --orange-ink:#8a4a1f;
+    --gray-bg:#e4e1d6;
+    --gray-ink:#5c584a;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;}
+  .wrap{
+    font-family:'IBM Plex Sans',sans-serif;
+    background:var(--bg);
+    color:var(--text-light);
+    min-height:100%;
+    padding:0 0 48px;
+  }
+  .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;}
+
+  /* ---- Marquee header ---- */
+  .marquee{
+    position:relative;
+    padding:38px 28px 30px;
+    background:
+      radial-gradient(ellipse at 20% 0%, rgba(201,155,63,0.18), transparent 55%),
+      radial-gradient(ellipse at 80% 0%, rgba(76,163,120,0.14), transparent 55%),
+      var(--bg2);
+    border-bottom:1px solid var(--bg-line);
+    overflow:hidden;
+  }
+  .eyebrow{
+    font-size:11px; letter-spacing:.18em; text-transform:uppercase;
+    color:var(--gold); font-weight:600; display:flex; align-items:center; gap:10px;
+  }
+  .eyebrow::before, .eyebrow::after{content:"";flex:0 0 22px;height:1px;background:var(--gold-dim);}
+  .title{
+    font-family:'Fraunces',serif; font-weight:600; font-optical-sizing:auto;
+    font-size:clamp(28px,4vw,44px); margin:10px 0 4px; letter-spacing:.01em;
+    padding:2px 6px; margin-left:-6px; border-radius:6px; border:1px solid transparent; cursor:text;
+  }
+  .title:hover, .subtitle:hover{border-color:var(--bg-line);}
+  .title:focus-visible, .subtitle:focus-visible{outline:none; border-color:var(--gold-dim); background:rgba(255,255,255,0.04);}
+  .subtitle{
+    color:var(--muted); font-size:14px; margin:0 0 24px;
+    padding:2px 6px; margin-left:-6px; border-radius:6px; border:1px solid transparent; cursor:text; display:inline-block;
+  }
+
+  .control-row{
+    display:flex; flex-wrap:wrap; gap:28px; align-items:flex-end; margin-top:18px;
+  }
+  .field-label{
+    display:block; font-size:11px; color:var(--muted); text-transform:uppercase;
+    letter-spacing:.1em; margin-bottom:6px;
+  }
+  input[type="date"]{
+    font-family:'IBM Plex Sans',sans-serif; font-size:15px; color:var(--text-light);
+    background:#1c3a2f; border:1px solid var(--bg-line); border-radius:6px; padding:8px 10px;
+    color-scheme:dark;
+  }
+  input[type="date"]:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .house-lights{display:flex; align-items:center; gap:14px;}
+  .ring{
+    position:relative; width:64px; height:64px; border-radius:50%;
+    background:conic-gradient(var(--gold) calc(var(--pct,0) * 1%), #234a3c 0);
+  }
+  .ring::before{
+    content:""; position:absolute; inset:6px; border-radius:50%; background:var(--bg2);
+  }
+  .ring span{
+    position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+    font-size:14px; font-weight:600; font-family:'Fraunces',serif;
+  }
+  .house-lights .counts{font-size:13px; color:var(--muted); line-height:1.6;}
+  .house-lights .counts b{color:var(--text-light); font-weight:600;}
+
+  /* ---- Acts (phase tabs) ---- */
+  .acts{
+    display:flex; gap:10px; flex-wrap:wrap; padding:22px 28px 0;
+  }
+  .act-btn{
+    font-family:'IBM Plex Sans',sans-serif; cursor:pointer;
+    background:#173229; border:1px solid var(--bg-line); color:var(--text-light);
+    border-radius:999px; padding:9px 18px 9px 14px; font-size:13px;
+    display:flex; align-items:center; gap:8px; transition:background .15s,border-color .15s;
+  }
+  .act-btn .num{
+    font-family:'Fraunces',serif; font-weight:600; color:var(--gold); font-size:13px;
+  }
+  .act-btn .mini-bar{
+    width:34px; height:4px; border-radius:2px; background:#234a3c; overflow:hidden;
+  }
+  .act-btn .mini-bar i{display:block; height:100%; background:var(--gold);}
+  .act-btn:hover{border-color:var(--gold-dim);}
+  .act-btn.active{background:#234a3c; border-color:var(--gold);}
+  .act-btn:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  .status-chips{
+    display:flex; gap:8px; flex-wrap:wrap; padding:14px 28px 0;
+  }
+  .chip{
+    font-size:12px; padding:6px 12px; border-radius:999px; cursor:pointer;
+    border:1px solid var(--bg-line); color:var(--muted); background:transparent;
+    font-family:'IBM Plex Sans',sans-serif;
+  }
+  .chip.active{background:var(--gold); border-color:var(--gold); color:#2a2205; font-weight:600;}
+  .chip:focus-visible{outline:2px solid var(--gold); outline-offset:2px;}
+
+  /* ---- Playbill paper panel ---- */
+  .paper{
+    margin:24px 28px 0; background:var(--paper); border-radius:14px; color:var(--ink);
+    box-shadow:0 24px 48px rgba(0,0,0,.35);
+    overflow:hidden;
+  }
+  .paper-head{
+    padding:20px 26px 12px; border-bottom:1px solid var(--paper-line);
+    display:flex; align-items:baseline; justify-content:space-between; gap:12px; flex-wrap:wrap;
+  }
+  .act-title{font-family:'Fraunces',serif; font-weight:600; font-size:20px;}
+  .act-sub{font-size:12px; color:var(--ink-soft);}
+  .head-right{display:flex; align-items:center; gap:14px;}
+  .add-btn{
+    font-family:'IBM Plex Sans',sans-serif; font-size:12.5px; font-weight:600; cursor:pointer;
+    background:var(--ink); color:var(--paper); border:none; border-radius:999px;
+    padding:8px 16px; white-space:nowrap;
+  }
+  .add-btn:hover{background:#3a3222;}
+  .add-btn:focus-visible{outline:2px solid var(--gold-dim); outline-offset:2px;}
+
+  .task-list{list-style:none; margin:0; padding:0;}
+  .task{
+    padding:16px 26px; border-bottom:1px solid var(--paper-line);
+    display:grid; grid-template-columns:1fr auto; gap:14px 18px; align-items:start;
+    position:relative;
+  }
+  .task:last-child{border-bottom:none;}
+  .task.done{opacity:.55;}
+  .task-main{min-width:0;}
+  .badge-row{display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-bottom:6px;}
+  .del-btn{
+    margin-left:auto; width:22px; height:22px; border-radius:50%; flex:0 0 auto;
+    border:1px solid var(--paper-line); background:#fff; color:var(--ink-soft);
+    font-size:13px; line-height:1; cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .del-btn:hover{border-color:var(--coral); color:var(--coral);}
+  .del-btn:focus-visible{outline:2px solid var(--gold-dim); outline-offset:1px;}
+  .cat{
+    font-size:11px; padding:3px 9px; border-radius:5px; background:#e9e2cd; color:var(--ink-soft);
+    font-weight:500; white-space:nowrap;
+  }
+  .urgent{
+    font-size:11px; padding:3px 9px; border-radius:5px; background:var(--coral); color:#3a1a06;
+    font-weight:600; letter-spacing:.03em;
+  }
+  .task-text{
+    font-size:15px; line-height:1.55; margin:0; padding:4px 6px; margin-left:-6px;
+    border-radius:5px; border:1px solid transparent; cursor:text;
+  }
+  .task-text:hover{border-color:var(--paper-line);}
+  .task-text:focus-visible{outline:none; border-color:var(--gold-dim); background:#fffdf6;}
+  .task-note{font-size:12.5px; color:var(--ink-soft); margin:5px 0 0; font-style:italic;}
+
+  .task-meta{
+    display:grid; grid-template-columns:repeat(3,minmax(96px,1fr)); gap:10px;
+    align-items:end; min-width:280px;
+  }
+  .meta-field label{
+    display:block; font-size:10px; text-transform:uppercase; letter-spacing:.08em;
+    color:var(--ink-soft); margin-bottom:4px;
+  }
+  .meta-field input[type="text"]{
+    width:100%; font-family:'IBM Plex Sans',sans-serif; font-size:13px; color:var(--ink);
+    background:#fff; border:1px solid var(--paper-line); border-radius:5px; padding:6px 8px;
+  }
+  .meta-field input[type="date"]{
+    width:100%; font-family:'IBM Plex Sans',sans-serif; font-size:13px; font-weight:500; color:var(--ink);
+    background:#fff; border:1px solid var(--paper-line); border-radius:5px; padding:5px 6px;
+    color-scheme:light;
+  }
+  .meta-field input[type="date"].soon{border-color:var(--coral); color:var(--coral); font-weight:600;}
+  select.status-select{
+    width:100%; font-family:'IBM Plex Sans',sans-serif; font-size:12.5px; font-weight:600;
+    border:1px solid var(--paper-line); border-radius:5px; padding:6px 6px; appearance:none;
+    -webkit-appearance:none; background-repeat:no-repeat; background-position:right 8px center;
+    background-size:10px;
+    background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='6'><path d='M0 0L5 6L10 0Z' fill='%235c584a'/></svg>");
+  }
+  select:focus-visible, input:focus-visible{outline:2px solid var(--gold-dim); outline-offset:1px;}
+  .st-未開始{background:var(--gray-bg); color:var(--gray-ink);}
+  .st-進行中{background:var(--amber-bg); color:var(--amber-ink);}
+  .st-待確認{background:var(--orange-bg); color:var(--orange-ink);}
+  .st-已完成{background:var(--green-bg); color:var(--green);}
+
+  .empty{padding:40px 26px; text-align:center; color:var(--ink-soft); font-size:14px;}
+
+  .foot-note{
+    max-width:640px; margin:22px 28px 0; font-size:12px; color:var(--muted); line-height:1.7;
+  }
+
+  @media (max-width:640px){
+    .task{grid-template-columns:1fr;}
+    .task-meta{grid-template-columns:1fr 1fr; min-width:0;}
+  }
+  @media (prefers-reduced-motion:no-preference){
+    .task{transition:opacity .25s ease;}
+  }
+</style>
+
+<div class="wrap">
+  <h2 class="sr-only">115-1 活動代辦清單，依前期籌備、兩週前、前一天當天、結案分享四個階段整理的互動式任務追蹤表</h2>
+
+  <div class="marquee">
+    <div class="eyebrow">Run sheet · 戲劇表演活動</div>
+    <h1 class="title" id="main-title" contenteditable="true" role="textbox" aria-label="編輯活動標題">115-1 活動代辦清單</h1>
+    <p class="subtitle" id="main-subtitle" contenteditable="true" role="textbox" aria-label="編輯副標題">依演出流程分幕整理，逐項追蹤到結案為止</p>
+
+    <div class="control-row">
+      <div>
+        <label class="field-label" for="event-date">活動日期</label>
+        <input type="date" id="event-date" value="2025-12-31">
+      </div>
+      <div class="house-lights">
+        <div class="ring" id="progress-ring"><span id="progress-pct">0%</span></div>
+        <div class="counts" id="progress-counts">載入中…</div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="acts" id="acts" aria-label="活動階段"></nav>
+  <div class="status-chips" id="chips" aria-label="依進度篩選"></div>
+
+  <section class="paper" aria-live="polite">
+    <div class="paper-head">
+      <div>
+        <div class="act-title" id="act-title">幕 I · 前期籌備</div>
+        <div class="act-sub" id="act-sub"></div>
+      </div>
+      <div class="head-right">
+        <div class="act-sub" id="act-count"></div>
+        <button type="button" class="add-btn" id="add-task-btn">＋ 新增代辦事項</button>
+      </div>
+    </div>
+    <ul class="task-list" id="task-list"></ul>
+  </section>
+
+  <p class="foot-note">資料自動儲存在你的瀏覽器帳號中（僅自己看得到）。調整「活動日期」會重新計算所有實施日期；任務內容、負責人、實施日期、進度都可直接編輯，也能自由新增或刪除項目，離開頁面後仍會保留。</p>
+</div>
+
+<script>
+(function(){
+  const ACTS = ["前期籌備","兩週前","前一天‧當天","結案分享"];
+  const ACT_LABEL = ["幕 I","幕 II","幕 III","幕 IV"];
+
+  const RAW = [
+    ["前期籌備","場地預約","預約演藝廳空間(12/30 6:00後、12/31 上午10:00~14:30，岱芬初步預約)",-60,"中","已完成",""],
+    ["前期籌備","場地預約","預約演藝廳空間 12/21.23.28.30 16:35~20:10",-60,"中","已完成",""],
+    ["前期籌備","公假處理","協助午休排練的學生請公假(每周四午休時間)",-45,"中","進行中",""],
+    ["前期籌備","內部告知","組長於導師會議中公告相關導師活動訊息(G8)",-45,"中","進行中",""],
+    ["前期籌備","需求索取","與 Stephen 索取海報",-30,"中","進行中",""],
+    ["前期籌備","電子需求單","製作指引海報x3、歡迎海報x1(申請電子需求單A1大小)、電梯指引小箭頭",-30,"中","進行中",""],
+    ["前期籌備","流程表","流程、座位表與 Stephen 做確認(傳給岱芬)",-30,"中","進行中",""],
+    ["前期籌備","人力安排","組內會議，確認當天人力崗位及流程說明",-21,"中","進行中",""],
+
+    ["兩週前","名單彙整","與 Stephen 確認表演之學生名單及索取家長名單",-14,"中","進行中",""],
+    ["兩週前","內部通知","(等名單下來)告知搭乘交通車時間更改 → teams教務處王珮宜(晚間車子)",-14,"中","進行中","盡量在請外師更早確認"],
+    ["兩週前","電子需求單","(等名單下來，提前一週)申請學生留校用晚餐",-14,"中","進行中",""],
+    ["兩週前","公假處理","(等名單下來)協助學生請公假(當日彩排與演出 B2-午休結束)並公告",-14,"中","進行中",""],
+    ["兩週前","場地確認","(等名單下來)再次確認排練的時間是否有場地",-14,"中","進行中",""],
+    ["兩週前","外師提醒","提醒 Stephen：學生課後練習需「自行請假」(若為週一則不需請假，週四需要)",-14,"中","進行中",""],
+    ["兩週前","電子需求單","申請演藝廳空調、借設備室鑰匙(推廣)",-14,"中","進行中",""],
+    ["兩週前","電子需求單","申請租借一張桌子以及桌巾，放置及回收於3樓演藝廳門口處",-14,"中","進行中","下次要記得"],
+    ["兩週前","電子需求單","申請海報架(3)：校門口、演藝廳3F入口處",-14,"中","進行中",""],
+    ["兩週前","家長通知","Stephen自行發送家長邀請函，僅需與他確認家長名單",-14,"中","進行中",""],
+    ["兩週前","Teams宣傳","Teams活動公告(國際處公告區)/與公假名單(SS_Absence)發布共兩篇(提前一週)",-14,"中","進行中",""],
+    ["兩週前","電子需求單","公關拍照、加強清潔申請(行政處行政組)，活動前後皆須",-14,"中","進行中",""],
+    ["兩週前","電子需求單","訪客入校申請！！",-14,"高","進行中","重要，勿漏辦"],
+    ["兩週前","電子需求單","訪客入校留 Celine 分機，若家長提早抵達需提早下樓(於5月會議提及)",-14,"中","進行中",""],
+    ["兩週前","校內公告","實體海報張貼(IPD門口公佈欄 & 海報板上放置3F演藝廳門口)",-10,"中","進行中",""],
+    ["兩週前","校內公告","以發信件的方式宣導本次活動(不須再問)",-10,"低","待確認","明年確認是否還需要"],
+    ["兩週前","校內公告","給年級主任座位表",-10,"中","進行中",""],
+
+    ["前一天‧當天","現場準備","安排座位表、採購物資(歸納教具 → Alice)",-3,"中","進行中",""],
+    ["前一天‧當天","最後檢視","總結活動流程及所需用品/設備是否到位",-1,"中","進行中",""],
+    ["前一天‧當天","最後檢視","務必將物料檢查過，準備好",-1,"中","進行中",""],
+    ["前一天‧當天","家長通知","給 Celine 訪客入校名單+電話 >> 家長簽到表",-1,"中","進行中",""],
+    ["前一天‧當天","提前準備","準備對講機(IPD)，提前一天充電，給David(先詢問需要幾台以及是否用耳機；耳機找生輔組文澤借)",-1,"中","進行中",""],
+    ["前一天‧當天","現場準備","海報板放置，貼座位引導牌，電梯貼小箭頭",-1,"中","進行中",""],
+    ["前一天‧當天","硬體準備","攜帶冷氣卡，設備鑰匙學生會提前借好！！",-1,"高","進行中","重要，勿漏辦"],
+    ["前一天‧當天","現場執行","訪客引導、拍照配合",0,"中","進行中",""],
+    ["前一天‧當天","現場執行","協助演出學生申請延用餐+Roll Call註記，午休時間公假B2-午休結束",0,"中","進行中",""],
+
+    ["結案分享","結案核銷","提交費用申請",7,"中","待確認",""],
+    ["結案分享","成果分享","與 David 邀稿、製作月報",7,"中","進行中",""],
+  ];
+
+  const items = RAW.map((r,i)=>({
+    id:"item_"+i, phase:r[0], cat:r[1], task:r[2], days:r[3],
+    priority:r[4], status:r[5], note:r[6], owner:"", dateOverride:null, custom:false
+  }));
+
+  let eventDate = new Date("2025-12-31T00:00:00");
+  let currentAct = 0;
+  let currentChip = "全部";
+  let deletedIds = new Set();
+  let customIds = [];
+
+  function activeItems(){
+    return items.filter(x=>!deletedIds.has(x.id));
+  }
+
+  function toISO(d){
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+    return `${y}-${m}-${day}`;
+  }
+  function fmtDate(d){
+    const y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,"0"), day=String(d.getDate()).padStart(2,"0");
+    return `${y}/${m}/${day}`;
+  }
+  function computedDue(days){
+    const d = new Date(eventDate); d.setDate(d.getDate()+days); return d;
+  }
+  function effectiveDue(it){
+    if(it.dateOverride) return new Date(it.dateOverride+"T00:00:00");
+    return computedDue(it.days);
+  }
+  function isSoon(it){
+    const due = effectiveDue(it);
+    const diff = (due - new Date())/86400000;
+    return diff <= 3 && diff >= -9999;
+  }
+
+  async function loadState(){
+    // custom item registry + deleted-id registry first, so we know what to expect
+    try{
+      const idxRec = await window.storage.get("todo_settings:custom_ids", false).catch(()=>null);
+      if(idxRec && idxRec.value) customIds = JSON.parse(idxRec.value);
+    }catch(e){}
+    try{
+      const delRec = await window.storage.get("todo_settings:deleted_ids", false).catch(()=>null);
+      if(delRec && delRec.value) deletedIds = new Set(JSON.parse(delRec.value));
+    }catch(e){}
+
+    // instantiate custom items (full record lives under todo:<id>)
+    for(const id of customIds){
+      try{
+        const rec = await window.storage.get("todo:"+id, false);
+        if(!rec) continue;
+        const val = JSON.parse(rec.value);
+        if(!items.find(x=>x.id===id)){
+          items.push({
+            id, phase:val.phase, cat:val.cat||"自訂", task:val.task||"新的代辦事項",
+            days:0, priority:val.priority||"中", status:val.status||"未開始",
+            note:val.note||"", owner:val.owner||"", dateOverride:val.dateOverride||toISO(new Date()),
+            custom:true
+          });
+        }
+      }catch(e){}
+    }
+
+    // overrides for original (RAW-derived) items
+    try{
+      const res = await window.storage.list("todo:");
+      if(res && res.keys){
+        for(const k of res.keys){
+          const id = k.replace("todo:","");
+          if(customIds.includes(id)) continue; // already fully loaded above
+          try{
+            const rec = await window.storage.get(k, false);
+            if(!rec) continue;
+            const val = JSON.parse(rec.value);
+            const it = items.find(x=>x.id===id);
+            if(it){
+              it.status = val.status ?? it.status;
+              it.owner = val.owner ?? it.owner;
+              it.task = val.task ?? it.task;
+              it.dateOverride = val.dateOverride ?? it.dateOverride;
+            }
+          }catch(e){}
+        }
+      }
+    }catch(e){ /* first run, no keys yet */ }
+
+    try{
+      const dateRec = await window.storage.get("todo_settings:event_date", false).catch(()=>null);
+      if(dateRec && dateRec.value){
+        eventDate = new Date(dateRec.value+"T00:00:00");
+        document.getElementById("event-date").value = dateRec.value;
+      }
+    }catch(e){}
+
+    try{
+      const titleRec = await window.storage.get("todo_settings:title", false).catch(()=>null);
+      if(titleRec && titleRec.value) document.getElementById("main-title").textContent = titleRec.value;
+    }catch(e){}
+    try{
+      const subRec = await window.storage.get("todo_settings:subtitle", false).catch(()=>null);
+      if(subRec && subRec.value) document.getElementById("main-subtitle").textContent = subRec.value;
+    }catch(e){}
+  }
+
+  async function saveItem(it){
+    try{
+      const payload = it.custom
+        ? { status:it.status, owner:it.owner, task:it.task, dateOverride:it.dateOverride,
+            phase:it.phase, cat:it.cat, priority:it.priority, note:it.note }
+        : { status:it.status, owner:it.owner, task:it.task, dateOverride:it.dateOverride };
+      await window.storage.set("todo:"+it.id, JSON.stringify(payload), false);
+    }catch(e){ console.error("儲存失敗", e); }
+  }
+  async function saveDate(v){
+    try{ await window.storage.set("todo_settings:event_date", v, false); }
+    catch(e){ console.error("儲存失敗", e); }
+  }
+  async function saveCustomIds(){
+    try{ await window.storage.set("todo_settings:custom_ids", JSON.stringify(customIds), false); }
+    catch(e){ console.error("儲存失敗", e); }
+  }
+  async function saveDeletedIds(){
+    try{ await window.storage.set("todo_settings:deleted_ids", JSON.stringify([...deletedIds]), false); }
+    catch(e){ console.error("儲存失敗", e); }
+  }
+
+  function addNewItem(){
+    const phase = ACTS[currentAct];
+    const id = "custom_"+Date.now()+"_"+Math.random().toString(36).slice(2,7);
+    const it = {
+      id, phase, cat:"自訂", task:"新的代辦事項(點此編輯)", days:0,
+      priority:"中", status:"未開始", note:"", owner:"",
+      dateOverride:toISO(new Date()), custom:true
+    };
+    items.push(it);
+    customIds.push(id);
+    saveCustomIds();
+    saveItem(it);
+    render();
+    requestAnimationFrame(()=>{
+      const el = document.getElementById("text-"+id);
+      if(el){
+        const range = document.createRange();
+        range.selectNodeContents(el);
+        const sel = window.getSelection();
+        sel.removeAllRanges(); sel.addRange(range);
+        el.focus();
+      }
+    });
+  }
+
+  function deleteItem(it){
+    deletedIds.add(it.id);
+    saveDeletedIds();
+    if(it.custom){
+      customIds = customIds.filter(id=>id!==it.id);
+      saveCustomIds();
+    }
+    render();
+  }
+
+  function renderActs(){
+    const wrap = document.getElementById("acts");
+    wrap.innerHTML = "";
+    ACTS.forEach((act, idx)=>{
+      const list = activeItems().filter(x=>x.phase===act);
+      const done = list.filter(x=>x.status==="已完成").length;
+      const pct = list.length ? Math.round(done/list.length*100) : 0;
+      const btn = document.createElement("button");
+      btn.className = "act-btn" + (idx===currentAct ? " active" : "");
+      btn.setAttribute("aria-pressed", idx===currentAct ? "true":"false");
+      btn.innerHTML = `<span class="num">${ACT_LABEL[idx]}</span><span>${act}</span><span class="mini-bar"><i style="width:${pct}%"></i></span>`;
+      btn.addEventListener("click", ()=>{ currentAct = idx; render(); });
+      wrap.appendChild(btn);
+    });
+  }
+
+  function renderChips(){
+    const wrap = document.getElementById("chips");
+    const opts = ["全部","未開始","進行中","待確認","已完成"];
+    wrap.innerHTML = "";
+    opts.forEach(o=>{
+      const b = document.createElement("button");
+      b.className = "chip" + (o===currentChip ? " active":"");
+      b.textContent = o;
+      b.addEventListener("click", ()=>{ currentChip = o; render(); });
+      wrap.appendChild(b);
+    });
+  }
+
+  function renderRing(){
+    const done = activeItems().filter(x=>x.status==="已完成").length;
+    const total = activeItems().length;
+    const pct = total ? Math.round(done/total*100) : 0;
+    document.getElementById("progress-ring").style.setProperty("--pct", pct);
+    document.getElementById("progress-pct").textContent = pct+"%";
+    document.getElementById("progress-counts").innerHTML =
+      `共 <b>${total}</b> 項<br>已完成 <b>${done}</b> ／ 剩 <b>${total-done}</b>`;
+  }
+
+  function renderList(){
+    const act = ACTS[currentAct];
+    let list = activeItems().filter(x=>x.phase===act);
+    if(currentChip!=="全部") list = list.filter(x=>x.status===currentChip);
+
+    document.getElementById("act-title").textContent = `${ACT_LABEL[currentAct]} · ${act}`;
+    const allInPhase = activeItems().filter(x=>x.phase===act);
+    const doneInPhase = allInPhase.filter(x=>x.status==="已完成").length;
+    document.getElementById("act-sub").textContent = `${allInPhase.length} 項任務`;
+    document.getElementById("act-count").textContent = `已完成 ${doneInPhase} / ${allInPhase.length}`;
+
+    const ul = document.getElementById("task-list");
+    ul.innerHTML = "";
+    if(list.length===0){
+      const li = document.createElement("li");
+      li.className = "empty";
+      li.textContent = "這個篩選條件下沒有代辦事項。";
+      ul.appendChild(li);
+      return;
+    }
+
+    list.forEach(it=>{
+      const li = document.createElement("li");
+      li.className = "task" + (it.status==="已完成" ? " done":"");
+      const due = effectiveDue(it);
+      const soon = it.status!=="已完成" && isSoon(it);
+
+      li.innerHTML = `
+        <div class="task-main">
+          <div class="badge-row">
+            <span class="cat">${it.cat}</span>
+            ${it.priority==="高" ? '<span class="urgent">優先處理</span>' : ""}
+            ${it.custom ? '<span class="cat">自訂項目</span>' : ""}
+            <button type="button" class="del-btn" id="del-${it.id}" title="刪除這個項目" aria-label="刪除這個代辦事項">×</button>
+          </div>
+          <p class="task-text" id="text-${it.id}" contenteditable="true" role="textbox" aria-label="編輯代辦事項內容">${it.task}</p>
+          ${it.note ? `<p class="task-note">備註：${it.note}</p>` : ""}
+        </div>
+        <div class="task-meta">
+          <div class="meta-field">
+            <label for="owner-${it.id}">負責人</label>
+            <input type="text" id="owner-${it.id}" placeholder="填寫" value="${it.owner.replace(/"/g,'&quot;')}">
+          </div>
+          <div class="meta-field">
+            <label for="due-${it.id}">實施日期</label>
+            <input type="date" id="due-${it.id}" class="${soon ? "soon":""}" value="${toISO(due)}">
+          </div>
+          <div class="meta-field">
+            <label for="status-${it.id}">進度</label>
+            <select id="status-${it.id}" class="status-select st-${it.status}">
+              <option ${it.status==="未開始"?"selected":""}>未開始</option>
+              <option ${it.status==="進行中"?"selected":""}>進行中</option>
+              <option ${it.status==="待確認"?"selected":""}>待確認</option>
+              <option ${it.status==="已完成"?"selected":""}>已完成</option>
+            </select>
+          </div>
+        </div>
+      `;
+      ul.appendChild(li);
+
+      li.querySelector(`#owner-${it.id}`).addEventListener("change",(e)=>{
+        it.owner = e.target.value; saveItem(it);
+      });
+
+      const textEl = li.querySelector(`#text-${it.id}`);
+      textEl.addEventListener("blur",()=>{
+        const val = textEl.textContent.trim();
+        if(val && val !== it.task){ it.task = val; saveItem(it); }
+        else{ textEl.textContent = it.task; }
+      });
+      textEl.addEventListener("keydown",(e)=>{
+        if(e.key==="Enter"){ e.preventDefault(); textEl.blur(); }
+      });
+
+      const dueEl = li.querySelector(`#due-${it.id}`);
+      dueEl.addEventListener("change",(e)=>{
+        if(!e.target.value) return;
+        it.dateOverride = e.target.value;
+        saveItem(it);
+        render();
+      });
+
+      const sel = li.querySelector(`#status-${it.id}`);
+      sel.addEventListener("change",(e)=>{
+        it.status = e.target.value;
+        sel.className = "status-select st-"+it.status;
+        saveItem(it);
+        render();
+      });
+
+      li.querySelector(`#del-${it.id}`).addEventListener("click", ()=>{
+        deleteItem(it);
+      });
+    });
+  }
+
+  function render(){
+    renderActs();
+    renderChips();
+    renderRing();
+    renderList();
+  }
+
+  document.getElementById("event-date").addEventListener("change",(e)=>{
+    if(!e.target.value) return;
+    eventDate = new Date(e.target.value+"T00:00:00");
+    saveDate(e.target.value);
+    render();
+  });
+
+  document.getElementById("add-task-btn").addEventListener("click", addNewItem);
+
+  const titleEl = document.getElementById("main-title");
+  titleEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); titleEl.blur(); } });
+  titleEl.addEventListener("blur",()=>{
+    const val = titleEl.textContent.trim();
+    if(val){ window.storage.set("todo_settings:title", val, false).catch(e=>console.error("儲存失敗",e)); }
+    else{ titleEl.textContent = "115-1 活動代辦清單"; }
+  });
+
+  const subEl = document.getElementById("main-subtitle");
+  subEl.addEventListener("keydown",(e)=>{ if(e.key==="Enter"){ e.preventDefault(); subEl.blur(); } });
+  subEl.addEventListener("blur",()=>{
+    const val = subEl.textContent.trim();
+    if(val){ window.storage.set("todo_settings:subtitle", val, false).catch(e=>console.error("儲存失敗",e)); }
+    else{ subEl.textContent = "依演出流程分幕整理，逐項追蹤到結案為止"; }
+  });
+
+  loadState().finally(render);
+})();
+</script>
