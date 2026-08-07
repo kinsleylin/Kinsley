@@ -1,0 +1,780 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校外教學請假通知產生器</title>
+<style>
+  :root{
+    --page:#FBF6F0;
+    --card:#FFFFFF;
+    --border:#EEE3D6;
+    --border-strong:#E4D5C2;
+    --text:#3B2F28;
+    --text-soft:#8C7C6E;
+    --text-faint:#B8AB9C;
+    --accent:#D9784F;
+    --accent-soft:#F6E4D8;
+    --accent-text:#A2502A;
+    --sage:#7C9270;
+    --sage-soft:#E7EEE2;
+    --sage-text:#4F6444;
+    --rose:#C97B8B;
+    --field:#FEFCFA;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    font-family:"Noto Sans TC","PingFang TC","Microsoft JhengHei",-apple-system,sans-serif;
+    background:var(--page);
+    color:var(--text);
+  }
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    padding:28px 20px 60px;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+  }
+  .lower-row{
+    display:flex;
+    gap:20px;
+    align-items:flex-start;
+    flex-wrap:wrap;
+  }
+  .sidebar{
+    width:300px;
+    flex:0 0 300px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .main{
+    flex:1 1 380px;
+    min-width:340px;
+  }
+  #sheetGridWrap{
+    overflow-x:auto;
+    border:1px solid var(--border);
+    border-radius:12px;
+    max-height:320px;
+    overflow-y:auto;
+  }
+  #sheetGrid{
+    border-collapse:collapse;
+    width:100%;
+    font-size:12px;
+  }
+  #sheetGrid thead th{
+    background:#F3EAE0;
+    color:var(--text-soft);
+    font-weight:700;
+    padding:6px 8px;
+    border:1px solid var(--border);
+    position:sticky;
+    top:0;
+    white-space:nowrap;
+    text-align:left;
+  }
+  #sheetGrid tbody td{
+    border:1px solid var(--border);
+    padding:5px 8px;
+    min-width:70px;
+    white-space:pre-wrap;
+    vertical-align:top;
+    background:var(--field);
+    outline:none;
+  }
+  #sheetGrid tbody td:focus{
+    background:var(--accent-soft);
+  }
+  #sheetGrid tbody tr:nth-child(even) td{
+    background:#FBF6F0;
+  }
+  #sheetGrid tbody tr:nth-child(even) td:focus{
+    background:var(--accent-soft);
+  }
+  .eyebrow{
+    font-size:11.5px;
+    letter-spacing:1.5px;
+    color:var(--text-faint);
+    font-weight:600;
+    margin-bottom:4px;
+  }
+  h1{
+    font-size:19px;
+    font-weight:700;
+    margin:0;
+    color:var(--text);
+  }
+  .card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:16px;
+    padding:14px 16px;
+  }
+  .card-title{
+    font-weight:700;
+    font-size:13.5px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    cursor:pointer;
+  }
+  .pill{
+    font-size:12px;
+    color:var(--sage-text);
+    background:var(--sage-soft);
+    padding:2px 9px;
+    border-radius:20px;
+  }
+  p.hint{
+    font-size:12px;
+    color:var(--text-soft);
+    margin:8px 0 8px;
+  }
+  textarea{
+    width:100%;
+    min-height:110px;
+    padding:10px;
+    border-radius:12px;
+    border:1px solid var(--border);
+    font-size:12px;
+    font-family:monospace;
+    resize:vertical;
+    background:var(--field);
+    color:var(--text);
+  }
+  input[type=text], input[type=search]{
+    width:100%;
+    padding:7px 10px;
+    border-radius:10px;
+    border:1px solid var(--border);
+    font-size:12.5px;
+    background:var(--field);
+    color:var(--text);
+  }
+  label.field-label{
+    font-size:11px;
+    color:var(--text-faint);
+    display:block;
+    margin-bottom:3px;
+  }
+  .row-gap{ margin-bottom:8px; }
+  .btn{
+    border:none;
+    border-radius:10px;
+    padding:8px 16px;
+    font-size:13px;
+    font-weight:700;
+    cursor:pointer;
+  }
+  .btn-primary{ background:var(--accent); color:white; }
+  .btn-ghost{ background:white; color:var(--accent-text); border:1px solid var(--accent); }
+  .btn-ghost-small{ background:white; color:var(--accent-text); border:1px solid var(--border-strong); border-radius:8px; padding:5px 12px; font-size:12px; font-weight:700; cursor:pointer; }
+  .link-btn{ background:none; border:none; color:var(--accent-text); font-size:12px; cursor:pointer; font-weight:700; }
+  .error{ color:var(--rose); font-size:12px; margin-top:6px; }
+  .btn-row{ display:flex; gap:8px; margin-top:10px; }
+  .suggest-wrap{ position:relative; }
+  .suggest-list{
+    position:absolute; top:calc(100% + 4px); left:0; right:0;
+    background:var(--card); border:1px solid var(--border); border-radius:12px;
+    box-shadow:0 8px 20px rgba(59,47,40,0.08); z-index:5; overflow:hidden;
+  }
+  .suggest-item{
+    padding:8px 12px; font-size:12.5px; cursor:pointer;
+    border-bottom:1px solid var(--border);
+    display:flex; justify-content:space-between;
+  }
+  .suggest-item:hover{ background:var(--accent-soft); }
+  .suggest-item:last-child{ border-bottom:none; }
+  .faint{ color:var(--text-faint); }
+  .leave-scroll{ display:flex; flex-direction:column; gap:8px; max-height:360px; overflow-y:auto; }
+  .leave-item{
+    border:1px solid var(--border); border-radius:12px; padding:8px 10px; background:var(--field);
+  }
+  .leave-item-top{ display:flex; justify-content:space-between; align-items:center; }
+  .leave-name{ font-size:12.5px; font-weight:700; }
+  .remove-btn{ border:none; background:none; color:var(--text-faint); font-size:13px; cursor:pointer; padding:0 2px; }
+  .period-row{ display:flex; gap:4px; margin-top:6px; flex-wrap:wrap; }
+  .period-chip{
+    border-radius:7px; padding:2px 7px; font-size:11px; font-weight:700; cursor:pointer;
+    border:1px solid var(--border-strong); background:white; color:var(--text-soft);
+  }
+  .period-chip.on{ background:var(--accent); border-color:var(--accent); color:white; }
+  .period-chip.disabled{ background:#F1EBE3; border-color:var(--border); color:var(--text-faint); cursor:not-allowed; }
+  .placeholder-card{ text-align:center; padding:50px 24px; color:var(--text-soft); font-size:13.5px; }
+  .tabs{ display:flex; gap:6px; }
+  .tab-btn{
+    border-radius:10px; padding:7px 14px; font-size:12.5px; font-weight:700; cursor:pointer;
+    border:1px solid var(--border); background:white; color:var(--text-soft);
+  }
+  .tab-btn.active{ border-color:var(--accent); background:var(--accent-soft); color:var(--accent-text); }
+  .main-header{ display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px; }
+  .msg-card{ display:flex; flex-direction:column; gap:10px; }
+  .badge{
+    font-weight:700; font-size:13.5px; padding:3px 11px; border-radius:20px;
+  }
+  .badge.subject{ background:var(--accent-soft); color:var(--accent-text); }
+  .badge.homeroom{ background:var(--sage-soft); color:var(--sage-text); }
+  .msg-top{ display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  pre.msg-text{
+    white-space:pre-wrap; font-family:inherit; font-size:13px; color:var(--text);
+    background:var(--field); border-radius:10px; padding:10px 12px; margin:0; border:1px solid var(--border);
+  }
+  .empty-note{ color:var(--text-faint); font-size:13px; text-align:center; padding:30px 0; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div>
+    <div class="eyebrow">請假通知整理工具</div>
+    <h1>校外教學請假通知</h1>
+  </div>
+
+  <!-- Import card: full width, Excel-like grid -->
+  <div class="card" id="importCard">
+    <div class="card-title" id="importToggle">
+      <span>課表資料</span>
+      <span class="pill" id="importPill" style="display:none;"></span>
+    </div>
+    <div id="importBody" style="margin-top:10px;">
+      <p class="hint">在 Google Sheet／Excel 選取整個範圍（含表頭）複製，接著點下方表格任一格，按 Ctrl+V（Mac 為 Cmd+V）貼上，會直接變成表格。</p>
+      <div id="sheetGridWrap" tabindex="0">
+        <table id="sheetGrid">
+          <thead>
+            <tr>
+              <th>學號</th><th>中文姓名</th><th>英文姓名</th><th>班級</th>
+              <th>B1</th><th>B2</th><th>H</th><th>B3</th><th>B4</th><th>導師名稱</th>
+            </tr>
+          </thead>
+          <tbody id="sheetGridBody"></tbody>
+        </table>
+      </div>
+      <div class="error" id="importError" style="display:none;"></div>
+      <div class="btn-row">
+        <button class="btn btn-primary" id="useGridBtn">使用此表格資料</button>
+        <button class="btn btn-ghost" id="sampleBtn">載入範例</button>
+        <button class="link-btn" id="addRowBtn" style="margin-left:auto; align-self:center;">+ 新增空白列</button>
+      </div>
+    </div>
+    <div id="importCollapsed" style="display:none; margin-top:8px; justify-content:space-between; align-items:center;">
+      <span style="font-size:12px; color:var(--text-soft);">已匯入課表</span>
+      <button class="link-btn" id="reimportBtn">重新匯入 / 編輯表格</button>
+    </div>
+  </div>
+
+  <div class="lower-row">
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <!-- Add students card -->
+    <div class="card" id="addCard" style="display:none;">
+      <div class="card-title" style="cursor:default;">
+        <span>加入請假學生</span>
+        <button class="link-btn" id="addAllBtn">全部加入</button>
+      </div>
+      <div class="suggest-wrap" style="margin-top:8px;">
+        <input type="text" id="addSearch" placeholder="學號 / 姓名 / 班級">
+        <div class="suggest-list" id="suggestList" style="display:none;"></div>
+      </div>
+    </div>
+
+    <!-- Event info -->
+    <div class="card" id="eventCard" style="display:none;">
+      <div class="card-title" style="cursor:default; margin-bottom:8px;">活動資訊</div>
+      <label class="field-label">活動名稱</label>
+      <input type="text" id="eventLabel" value="校外教學" class="row-gap">
+      <label class="field-label">日期（選填）</label>
+      <input type="text" id="eventDate" placeholder="例如 5/27">
+    </div>
+
+    <!-- Leave list -->
+    <div class="card" id="leaveListCard" style="display:none;">
+      <div class="card-title" style="cursor:default; margin-bottom:8px;">
+        請假名單 <span class="faint" style="font-weight:400;" id="leaveCount"></span>
+      </div>
+      <div class="leave-scroll" id="leaveScroll"></div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="card placeholder-card" id="placeholderNoSchedule">
+先在上方表格貼上課表資料，通知訊息會顯示在這裡。
+    </div>
+    <div class="card placeholder-card" id="placeholderNoStudents" style="display:none;">
+      從左側加入這次要請假的學生，通知訊息就會顯示在這裡。
+    </div>
+    <div id="outputArea" style="display:none;">
+      <div class="main-header">
+        <div class="tabs">
+          <button class="tab-btn active" id="tabSubject">任課老師 (<span id="subjectCount">0</span>)</button>
+          <button class="tab-btn" id="tabHomeroom">導師 (<span id="homeroomCount">0</span>)</button>
+        </div>
+        <button class="btn btn-primary" id="copyAllBtn">複製全部訊息</button>
+      </div>
+      <div id="msgList" class="msg-card"></div>
+    </div>
+  </div>
+  </div>
+</div>
+
+<script>
+const PERIOD_ORDER = ["B1","B2","H","B3","B4"];
+const PERIOD_LABEL = {B1:"B1",B2:"B2",H:"H",B3:"B3",B4:"B4"};
+
+const SAMPLE = `學號\t中文姓名\t英文姓名\t班級\tB1\tB2\tH\tB3\tB4\t導師名稱
+LS12035\t李吟菱\tSophie Lee\t12A\tSC:12:R:RG(1)\nSteven\nH514\tSS:12:O:AP(3)\nFrances\nH113\t導師時間\tEN:12:2:H1(2)\nTomM\nH706\tMA:12:Y:RG(3)\nJessica\nH304\t陳靖
+LS12111\t陳祉寧\tAmber Chen\t12B\tSS:12:R:AP(1)\nEvan\nH217\tSS:12:O:AP(3)\nFrances\nH113\t導師時間\tEN:12:2:H1(2)\nTomM\nH706\tMA:12:Y:RG(1)\nAlessandro\nH209\t林子嫙
+LS12011\t史妮可\tNicole Shih\t12C\tSC:12:R:RG(1)\nSteven\nH514\tSS:12:O:AP(3)\nFrances\nH113\t導師時間\tEN:12:2:H1(3)\nJayJ\nH701\tMA:12:Y:RG(5)\nRyan\nH205\t許皓筑
+LS12121\t陳歆瑜\tAbigail Chen\t12D\tSC:12:R:AP(1)\nDon\nH609\tSS:12:O:AP(3)\nFrances\nH113\t導師時間\t國文-121(2)\n李語桐\nH420\tMA:12:Y:RG(3)\nJessica\nH304\t邱振男
+LS12109\t陳宥臻\tAlly Chen\t12E\tSC:12:R:RG(1)\nSteven\nH514\tSS:12:O:AP(3)\nFrances\nH113\t導師時間\tEN:12:2:H1(3)\nJayJ\nH701\tMA:12:Y:RG(5)\nRyan\nH205\t葉恩慈
+LS12183\t蔡妮臻\tSasa Tsai\t12E\tSC:12:R:AP(1)\nDon\nH609\tSS:12:O:AP(3)\nFrances\nH113\t導師時間\t國文-121(3)\n邱振男\nH519\tMA:12:Y:RG(4)\nShem\nH211\t葉恩慈`;
+
+let students = [];        // parsed student objects
+let leaveList = [];       // [{key, periods:{B1:bool,...}}]
+let currentView = "subject";
+let copiedTimer = null;
+
+function splitCells(line){ return line.split("\t"); }
+
+// Parse plain-text clipboard (tab separated, multi-line cells) into row arrays.
+function textToRows(text){
+  const lines = text.replace(/\r/g,"").split("\n");
+  const rows = [];
+  let current = null;
+  for(const line of lines){
+    if(line.trim()==="") continue;
+    const cells = splitCells(line);
+    const firstCell = (cells[0]||"").trim();
+    if(firstCell !== "" || current === null){
+      current = cells.slice();
+      while(current.length < 10) current.push("");
+      rows.push(current);
+    } else {
+      for(let i=0;i<cells.length && i<10;i++){
+        if(cells[i] && cells[i].trim() !== ""){
+          current[i] = (current[i] ? current[i] + "\n" : "") + cells[i].trim();
+        }
+      }
+    }
+  }
+  return rows;
+}
+
+// Parse clipboard HTML (real <table> from Excel/Sheets) into row arrays — far more
+// reliable than the text heuristic since cell boundaries are explicit.
+function htmlToRows(html){
+  try{
+    const doc = new DOMParser().parseFromString(html, "text/html");
+    const table = doc.querySelector("table");
+    if(!table) return null;
+    const rows = [];
+    table.querySelectorAll("tr").forEach(tr => {
+      const cells = [];
+      tr.querySelectorAll("td,th").forEach(td => {
+        let inner = td.innerHTML
+          .replace(/<br\s*\/?>/gi, "\n")
+          .replace(/<\/div>/gi, "\n")
+          .replace(/<div[^>]*>/gi, "")
+          .replace(/<\/p>/gi, "\n")
+          .replace(/<p[^>]*>/gi, "");
+        const tmp = document.createElement("div");
+        tmp.innerHTML = inner;
+        let txt = (tmp.textContent || "").replace(/\u00a0/g, " ");
+        txt = txt.split("\n").map(s=>s.trim()).filter(Boolean).join("\n");
+        cells.push(txt);
+      });
+      if(cells.length > 0) rows.push(cells);
+    });
+    return rows;
+  } catch(e){
+    return null;
+  }
+}
+
+function parsePeriodCell(raw, isHomeroomCol){
+  if(!raw) return null;
+  const ls = String(raw).split("\n").map(s=>s.trim()).filter(Boolean);
+  if(ls.length===0) return null;
+  if(isHomeroomCol || ls.some(l=>l.includes("導師時間"))){
+    return {isHomeroom:true, label: ls[0]};
+  }
+  return {code: ls[0]||"", teacher: ls[1]||"", room: ls[2]||""};
+}
+
+function rowsToStudents(rows){
+  const dataRows = rows.filter(r => (r[0]||"").trim() !== "" && (r[0]||"").trim() !== "學號");
+  return dataRows.map((r, idx) => {
+    const [id, cn, en, cls, b1, b2, h, b3, b4, homeroom] = r;
+    return {
+      key: `${id||"row"}-${idx}`,
+      id: (id||"").trim(),
+      cn: (cn||"").trim(),
+      en: (en||"").trim(),
+      cls: (cls||"").trim(),
+      homeroomTeacher: (homeroom||"").trim(),
+      periods: {
+        B1: parsePeriodCell(b1,false),
+        B2: parsePeriodCell(b2,false),
+        H: parsePeriodCell(h,true),
+        B3: parsePeriodCell(b3,false),
+        B4: parsePeriodCell(b4,false),
+      }
+    };
+  });
+}
+
+function studentByKey(key){ return students.find(s => s.key === key); }
+
+// ---------- Excel-like grid ----------
+let gridData = Array.from({length:8}, () => Array(10).fill(""));
+let activeCell = {row:0, col:0};
+
+const sheetGridBody = document.getElementById("sheetGridBody");
+
+function renderGrid(){
+  sheetGridBody.innerHTML = "";
+  gridData.forEach((row, ri) => {
+    const tr = document.createElement("tr");
+    for(let ci=0; ci<10; ci++){
+      const td = document.createElement("td");
+      td.contentEditable = "true";
+      td.textContent = row[ci] || "";
+      td.dataset.row = ri;
+      td.dataset.col = ci;
+      tr.appendChild(td);
+    }
+    sheetGridBody.appendChild(tr);
+  });
+}
+renderGrid();
+
+sheetGridBody.addEventListener("focusin", (e) => {
+  if(e.target.tagName === "TD"){
+    activeCell = {row: +e.target.dataset.row, col: +e.target.dataset.col};
+  }
+});
+
+sheetGridBody.addEventListener("input", (e) => {
+  if(e.target.tagName === "TD"){
+    const r = +e.target.dataset.row, c = +e.target.dataset.col;
+    if(gridData[r]) gridData[r][c] = e.target.innerText;
+  }
+});
+
+sheetGridBody.addEventListener("paste", (e) => {
+  e.preventDefault();
+  const html = e.clipboardData.getData("text/html");
+  const text = e.clipboardData.getData("text/plain");
+  let rows = null;
+  if(html && html.toLowerCase().includes("<table")){
+    rows = htmlToRows(html);
+  }
+  if(!rows || rows.length === 0){
+    rows = textToRows(text);
+  }
+  if(!rows || rows.length === 0) return;
+  if((rows[0][0]||"").trim() === "學號"){ rows = rows.slice(1); }
+
+  const startRow = activeCell.row, startCol = activeCell.col;
+  rows.forEach((r, i) => {
+    const targetRow = startRow + i;
+    while(gridData.length <= targetRow) gridData.push(Array(10).fill(""));
+    for(let c=0; c<10; c++){
+      const srcCol = c - startCol;
+      if(srcCol >= 0 && srcCol < r.length){
+        gridData[targetRow][c] = r[srcCol];
+      }
+    }
+  });
+  renderGrid();
+});
+
+document.getElementById("addRowBtn").onclick = () => {
+  gridData.push(Array(10).fill(""));
+  renderGrid();
+};
+
+// ---------- Import ----------
+const importToggle = document.getElementById("importToggle");
+const importBody = document.getElementById("importBody");
+const importCollapsed = document.getElementById("importCollapsed");
+const importPill = document.getElementById("importPill");
+const importError = document.getElementById("importError");
+
+document.getElementById("useGridBtn").onclick = () => doParse(gridData);
+document.getElementById("sampleBtn").onclick = () => {
+  const rows = textToRows(SAMPLE).filter(r => (r[0]||"").trim() !== "學號");
+  gridData = rows.map(r => { const a = r.slice(0,10); while(a.length<10) a.push(""); return a; });
+  while(gridData.length < 8) gridData.push(Array(10).fill(""));
+  renderGrid();
+  doParse(gridData);
+};
+document.getElementById("reimportBtn").onclick = () => {
+  importBody.style.display = "block";
+  importCollapsed.style.display = "none";
+};
+importToggle.onclick = () => {
+  if(students.length === 0) return;
+  const showing = importBody.style.display !== "none";
+  importBody.style.display = showing ? "none" : "block";
+  importCollapsed.style.display = showing ? "flex" : "none";
+};
+
+function doParse(rows){
+  const parsed = rowsToStudents(rows);
+  if(parsed.length === 0){
+    importError.textContent = "沒有解析到學生資料，請確認表格已貼上內容，且第一欄是學號。";
+    importError.style.display = "block";
+    return;
+  }
+  students = parsed;
+  leaveList = [];
+  importError.style.display = "none";
+  importPill.style.display = "inline-block";
+  importPill.textContent = students.length + " 位學生";
+  importBody.style.display = "none";
+  importCollapsed.style.display = "flex";
+
+  document.getElementById("addCard").style.display = "block";
+  document.getElementById("eventCard").style.display = "block";
+  document.getElementById("placeholderNoSchedule").style.display = "none";
+  document.getElementById("placeholderNoStudents").style.display = "block";
+
+  renderLeaveList();
+  renderOutput();
+}
+
+// ---------- Add students ----------
+const addSearch = document.getElementById("addSearch");
+const suggestList = document.getElementById("suggestList");
+
+addSearch.addEventListener("input", renderSuggestions);
+document.getElementById("addAllBtn").onclick = () => {
+  const inList = new Set(leaveList.map(l=>l.key));
+  students.filter(s=>!inList.has(s.key)).forEach(s => leaveList.push(makeLeaveEntry(s)));
+  renderLeaveList();
+  renderOutput();
+};
+
+function makeLeaveEntry(s){
+  const p = {};
+  PERIOD_ORDER.forEach(k => p[k] = !!s.periods[k]);
+  return {key: s.key, periods: p};
+}
+
+function renderSuggestions(){
+  const q = addSearch.value.trim().toLowerCase();
+  suggestList.innerHTML = "";
+  if(!q){ suggestList.style.display = "none"; return; }
+  const inList = new Set(leaveList.map(l=>l.key));
+  const matches = students.filter(s => !inList.has(s.key)).filter(s =>
+    s.id.toLowerCase().includes(q) || s.cn.includes(q) || s.en.toLowerCase().includes(q) || s.cls.toLowerCase().includes(q)
+  ).slice(0,6);
+  if(matches.length === 0){ suggestList.style.display = "none"; return; }
+  matches.forEach(s => {
+    const div = document.createElement("div");
+    div.className = "suggest-item";
+    div.innerHTML = `<span>${s.cn} <span class="faint">${s.en}</span></span><span class="faint">${s.cls}</span>`;
+    div.onclick = () => {
+      leaveList.push(makeLeaveEntry(s));
+      addSearch.value = "";
+      suggestList.style.display = "none";
+      renderLeaveList();
+      renderOutput();
+    };
+    suggestList.appendChild(div);
+  });
+  suggestList.style.display = "block";
+}
+
+document.addEventListener("click", (e) => {
+  if(!suggestList.contains(e.target) && e.target !== addSearch){
+    suggestList.style.display = "none";
+  }
+});
+
+// ---------- Leave list ----------
+function renderLeaveList(){
+  const card = document.getElementById("leaveListCard");
+  const scroll = document.getElementById("leaveScroll");
+  const count = document.getElementById("leaveCount");
+  if(leaveList.length === 0){ card.style.display = "none"; return; }
+  card.style.display = "block";
+  count.textContent = "· " + leaveList.length + " 位";
+  scroll.innerHTML = "";
+  leaveList.forEach(l => {
+    const s = studentByKey(l.key);
+    if(!s) return;
+    const item = document.createElement("div");
+    item.className = "leave-item";
+    const top = document.createElement("div");
+    top.className = "leave-item-top";
+    top.innerHTML = `<span class="leave-name">${s.cn} <span class="faint" style="font-weight:400;">${s.cls}</span></span>`;
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "remove-btn";
+    removeBtn.textContent = "✕";
+    removeBtn.onclick = () => {
+      leaveList = leaveList.filter(x => x.key !== l.key);
+      renderLeaveList();
+      renderOutput();
+    };
+    top.appendChild(removeBtn);
+    item.appendChild(top);
+
+    const periodRow = document.createElement("div");
+    periodRow.className = "period-row";
+    PERIOD_ORDER.forEach(p => {
+      const has = !!s.periods[p];
+      const on = l.periods[p];
+      const chip = document.createElement("button");
+      chip.textContent = PERIOD_LABEL[p];
+      chip.className = "period-chip" + (!has ? " disabled" : on ? " on" : "");
+      chip.disabled = !has;
+      if(has){
+        chip.onclick = () => {
+          l.periods[p] = !l.periods[p];
+          renderLeaveList();
+          renderOutput();
+        };
+      }
+      periodRow.appendChild(chip);
+    });
+    item.appendChild(periodRow);
+    scroll.appendChild(item);
+  });
+}
+
+// ---------- Output ----------
+document.getElementById("tabSubject").onclick = () => { currentView = "subject"; renderOutput(); };
+document.getElementById("tabHomeroom").onclick = () => { currentView = "homeroom"; renderOutput(); };
+document.getElementById("copyAllBtn").onclick = copyAllMessages;
+
+function buildGroups(){
+  const teacherMap = new Map();
+  const homeroomMap = new Map();
+  leaveList.forEach(l => {
+    const s = studentByKey(l.key);
+    if(!s) return;
+    ["B1","B2","B3","B4"].forEach(p => {
+      if(!l.periods[p]) return;
+      const pd = s.periods[p];
+      if(!pd) return;
+      const teacher = pd.teacher || "（未知授課老師）";
+      if(!teacherMap.has(teacher)) teacherMap.set(teacher, []);
+      teacherMap.get(teacher).push({period:p, name: `${s.cn}${s.en}(${s.cls})`});
+    });
+    if(l.periods.H){
+      const teacher = s.homeroomTeacher || "（未知導師）";
+      if(!homeroomMap.has(teacher)) homeroomMap.set(teacher, []);
+      homeroomMap.get(teacher).push(s.cn);
+    }
+  });
+  const teacherGroups = Array.from(teacherMap.entries()).map(([teacher, entries]) => ({teacher, entries}));
+  const homeroomGroups = Array.from(homeroomMap.entries()).map(([teacher, names]) => ({teacher, names}));
+  return {teacherGroups, homeroomGroups};
+}
+
+function buildTeacherMessage(g){
+  const eventLabel = document.getElementById("eventLabel").value || "校外教學";
+  const eventDate = document.getElementById("eventDate").value;
+  const byPeriod = {};
+  g.entries.forEach(e => {
+    if(!byPeriod[e.period]) byPeriod[e.period] = [];
+    byPeriod[e.period].push(e.name);
+  });
+  const lines = PERIOD_ORDER.filter(p => byPeriod[p]).map(p => `${p} 節：${byPeriod[p].join("、")}`);
+  const dateStr = eventDate ? `（${eventDate}）` : "";
+  return `${g.teacher} 老師您好，${eventLabel}${dateStr}以下學生請假：\n${lines.join("\n")}\n請知悉，謝謝！`;
+}
+
+function buildHomeroomMessage(g){
+  const eventLabel = document.getElementById("eventLabel").value || "校外教學";
+  const eventDate = document.getElementById("eventDate").value;
+  const dateStr = eventDate ? `（${eventDate}）` : "";
+  return `${g.teacher} 老師您好，${eventLabel}${dateStr}導師時間以下學生請假：\n${g.names.join("、")}\n請知悉，謝謝！`;
+}
+
+function renderOutput(){
+  const placeholderNoStudents = document.getElementById("placeholderNoStudents");
+  const outputArea = document.getElementById("outputArea");
+
+  if(leaveList.length === 0){
+    placeholderNoStudents.style.display = "block";
+    outputArea.style.display = "none";
+    return;
+  }
+  placeholderNoStudents.style.display = "none";
+  outputArea.style.display = "block";
+
+  const {teacherGroups, homeroomGroups} = buildGroups();
+  document.getElementById("subjectCount").textContent = teacherGroups.length;
+  document.getElementById("homeroomCount").textContent = homeroomGroups.length;
+
+  document.getElementById("tabSubject").classList.toggle("active", currentView === "subject");
+  document.getElementById("tabHomeroom").classList.toggle("active", currentView === "homeroom");
+
+  const msgList = document.getElementById("msgList");
+  msgList.innerHTML = "";
+  const groups = currentView === "subject" ? teacherGroups : homeroomGroups;
+
+  if(groups.length === 0){
+    const div = document.createElement("div");
+    div.className = "card empty-note";
+    div.textContent = currentView === "subject" ? "目前沒有勾選任何科目節次。" : "目前沒有學生於 H 節請假。";
+    msgList.appendChild(div);
+    return;
+  }
+
+  groups.forEach(g => {
+    const isSubject = currentView === "subject";
+    const text = isSubject ? buildTeacherMessage(g) : buildHomeroomMessage(g);
+    const card = document.createElement("div");
+    card.className = "card";
+    const top = document.createElement("div");
+    top.className = "msg-top";
+    const badge = document.createElement("span");
+    badge.className = "badge " + (isSubject ? "subject" : "homeroom");
+    badge.textContent = g.teacher + (isSubject ? "" : "（導師）");
+    const copyBtn = document.createElement("button");
+    copyBtn.className = "btn-ghost-small";
+    copyBtn.textContent = "複製";
+    copyBtn.onclick = () => {
+      navigator.clipboard.writeText(text).then(() => {
+        copyBtn.textContent = "已複製 ✓";
+        setTimeout(() => { copyBtn.textContent = "複製"; }, 1400);
+      });
+    };
+    top.appendChild(badge);
+    top.appendChild(copyBtn);
+    card.appendChild(top);
+
+    const pre = document.createElement("pre");
+    pre.className = "msg-text";
+    pre.textContent = text;
+    card.appendChild(pre);
+
+    msgList.appendChild(card);
+  });
+}
+
+function copyAllMessages(){
+  const {teacherGroups, homeroomGroups} = buildGroups();
+  const all = [
+    ...teacherGroups.map(buildTeacherMessage),
+    ...homeroomGroups.map(buildHomeroomMessage)
+  ].join("\n\n— — —\n\n");
+  navigator.clipboard.writeText(all).then(() => {
+    const btn = document.getElementById("copyAllBtn");
+    const original = btn.textContent;
+    btn.textContent = "已複製全部 ✓";
+    setTimeout(() => { btn.textContent = original; }, 1400);
+  });
+}
+</script>
+
+</body>
+</html>
