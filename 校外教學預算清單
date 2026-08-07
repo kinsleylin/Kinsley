@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>校外教學費用試算表</title>
+<style>
+  :root{
+    --ink:#14453D;
+    --ink-dark:#0D2F29;
+    --paper:#F6F4EE;
+    --paper-line:#E4E0D4;
+    --gold:#B08D57;
+    --gold-light:#E8DCC4;
+    --loss:#A33B2E;
+    --text:#2A2A28;
+    --text-mute:#6B6B63;
+    --white:#FFFEFB;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--paper);
+    color:var(--text);
+    font-family:'IBM Plex Sans','Noto Sans TC',sans-serif;
+    padding:32px 16px 80px;
+  }
+  .wrap{max-width:980px;margin:0 auto;}
+
+  .masthead{
+    display:flex;
+    justify-content:space-between;
+    align-items:flex-end;
+    border-bottom:3px solid var(--ink);
+    padding-bottom:14px;
+    margin-bottom:28px;
+  }
+  .masthead h1{
+    font-family:'Noto Serif TC',serif;
+    font-size:28px;
+    font-weight:700;
+    margin:0;
+    color:var(--ink-dark);
+    letter-spacing:1px;
+  }
+  .masthead .tag{
+    font-size:12px;
+    color:var(--text-mute);
+    letter-spacing:2px;
+    text-transform:uppercase;
+  }
+  .masthead .doc-no{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:12px;
+    color:var(--text-mute);
+    text-align:right;
+  }
+
+  .info-card{
+    background:var(--white);
+    border:1px solid var(--paper-line);
+    border-left:4px solid var(--ink);
+    border-radius:4px;
+    padding:18px 22px;
+    margin-bottom:28px;
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+    gap:14px 24px;
+  }
+  .field{display:flex;flex-direction:column;gap:4px;}
+  .field label{
+    font-size:11px;
+    color:var(--text-mute);
+    letter-spacing:1px;
+    text-transform:uppercase;
+  }
+  .field input{
+    border:none;
+    border-bottom:1px solid var(--paper-line);
+    background:transparent;
+    font-size:15px;
+    padding:4px 2px;
+    font-family:inherit;
+    color:var(--text);
+  }
+  .field input:focus{outline:none;border-bottom:1px solid var(--ink);}
+
+  section.block{margin-bottom:34px;}
+  .block-head{
+    display:flex;
+    align-items:baseline;
+    gap:10px;
+    margin-bottom:10px;
+  }
+  .block-head .num{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:13px;
+    color:var(--gold);
+    border:1px solid var(--gold);
+    border-radius:50%;
+    width:22px;height:22px;
+    display:flex;align-items:center;justify-content:center;
+    flex-shrink:0;
+  }
+  .block-head h2{
+    font-size:16px;
+    margin:0;
+    font-weight:700;
+    color:var(--ink-dark);
+  }
+  .block-head .sub{
+    font-size:12px;
+    color:var(--text-mute);
+  }
+
+  table{
+    width:100%;
+    border-collapse:collapse;
+    background:var(--white);
+    border:1px solid var(--paper-line);
+  }
+  thead th{
+    background:var(--ink);
+    color:var(--white);
+    font-size:12px;
+    font-weight:500;
+    letter-spacing:1px;
+    padding:9px 8px;
+    text-align:left;
+  }
+  tbody td{
+    padding:6px 8px;
+    border-bottom:1px solid var(--paper-line);
+    font-size:14px;
+  }
+  tbody tr:last-child td{border-bottom:none;}
+  td input{
+    width:100%;
+    border:none;
+    background:transparent;
+    font-family:inherit;
+    font-size:14px;
+    padding:4px 2px;
+    color:var(--text);
+  }
+  td input:focus{outline:none;background:var(--gold-light);}
+  td.num, th.num{text-align:right;}
+  td.num input{text-align:right;font-family:'IBM Plex Mono',monospace;}
+  .subtotal-cell{
+    font-family:'IBM Plex Mono',monospace;
+    text-align:right;
+    font-weight:600;
+    color:var(--ink-dark);
+  }
+  .del-btn{
+    background:none;border:none;color:var(--text-mute);
+    cursor:pointer;font-size:16px;line-height:1;padding:2px 6px;
+    border-radius:3px;
+  }
+  .del-btn:hover{color:var(--loss);background:#f3e6e3;}
+
+  .table-foot{
+    display:flex;justify-content:space-between;align-items:center;
+    margin-top:8px;
+  }
+  .add-row-btn{
+    background:none;
+    border:1px dashed var(--text-mute);
+    color:var(--text-mute);
+    font-size:12px;
+    padding:6px 12px;
+    border-radius:4px;
+    cursor:pointer;
+    font-family:inherit;
+  }
+  .add-row-btn:hover{border-color:var(--ink);color:var(--ink);}
+  .row-total{
+    font-size:13px;
+    color:var(--text);
+  }
+  .row-total b{
+    font-family:'IBM Plex Mono',monospace;
+    color:var(--ink-dark);
+    font-size:15px;
+  }
+
+  .per-student-line{
+    display:flex;justify-content:flex-end;gap:8px;align-items:baseline;
+    margin-top:10px;font-size:13px;color:var(--text-mute);
+  }
+  .per-student-line b{
+    font-family:'IBM Plex Mono',monospace;
+    font-size:18px;color:var(--ink-dark);
+  }
+
+  /* Receipt summary */
+  .receipt{
+    background:var(--ink-dark);
+    color:var(--white);
+    border-radius:6px;
+    padding:26px 30px;
+    position:relative;
+    overflow:hidden;
+  }
+  .receipt::before{
+    content:"";
+    position:absolute;top:0;left:0;right:0;height:4px;
+    background:repeating-linear-gradient(90deg,var(--gold) 0 10px, transparent 10px 20px);
+  }
+  .receipt h2{
+    font-family:'Noto Serif TC',serif;
+    font-size:18px;margin:0 0 18px;
+    letter-spacing:2px;
+  }
+  .receipt-row{
+    display:flex;justify-content:space-between;
+    padding:7px 0;
+    border-bottom:1px dashed rgba(255,255,255,0.18);
+    font-size:14px;
+  }
+  .receipt-row.editable input{
+    background:transparent;border:none;border-bottom:1px solid rgba(255,255,255,0.4);
+    color:var(--white);font-family:'IBM Plex Mono',monospace;text-align:right;
+    width:110px;font-size:14px;padding:2px 4px;
+  }
+  .receipt-row.editable input:focus{outline:none;border-bottom:1px solid var(--gold);}
+  .receipt-row .val{
+    font-family:'IBM Plex Mono',monospace;
+  }
+  .receipt-row.total{
+    border-bottom:none;
+    margin-top:8px;padding-top:14px;
+    border-top:1px solid rgba(255,255,255,0.3);
+    font-size:16px;font-weight:700;
+  }
+  .receipt-row.total .val{color:var(--gold);font-size:20px;}
+  .receipt-final{
+    margin-top:20px;
+    background:rgba(255,255,255,0.06);
+    border-radius:4px;
+    padding:16px 18px;
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .receipt-final .label{font-size:13px;color:rgba(255,255,255,0.75);}
+  .receipt-final .amount{font-family:'IBM Plex Mono',monospace;font-size:26px;font-weight:700;}
+  .receipt-final.loss .amount{color:#F0A99E;}
+  .receipt-final.profit .amount{color:#8FD9C4;}
+  .warn{
+    margin-top:12px;font-size:12px;color:#F0A99E;
+    display:none;
+  }
+  .warn.show{display:block;}
+
+  .print-btn{
+    display:inline-flex;align-items:center;gap:6px;
+    background:var(--ink);color:var(--white);
+    border:none;padding:10px 20px;border-radius:4px;
+    font-size:13px;cursor:pointer;font-family:inherit;
+    margin-top:24px;
+  }
+  .print-btn:hover{background:var(--ink-dark);}
+
+  @media print{
+    body{background:white;padding:0;}
+    .add-row-btn,.del-btn,.print-btn{display:none !important;}
+    .receipt{background:white;color:black;border:2px solid black;}
+    .receipt-row{border-bottom:1px dashed #999;}
+    .receipt-row.total .val{color:black;}
+    .receipt-final .amount{color:black !important;}
+  }
+  @media (max-width:640px){
+    .masthead{flex-direction:column;align-items:flex-start;gap:6px;}
+    table{font-size:12px;}
+    thead th{padding:7px 4px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="tag">Field Trip Budget Worksheet</div>
+      <h1>校外教學費用試算表</h1>
+    </div>
+    <div class="doc-no" id="today"></div>
+  </div>
+
+  <div class="info-card">
+    <div class="field"><label>活動名稱</label><input id="actName" value="校外教學參訪活動"></div>
+    <div class="field"><label>活動日期</label><input id="actDate" placeholder="例：04 月 24 日（五）"></div>
+    <div class="field"><label>活動地點</label><input id="actPlace" placeholder="例：台北華視"></div>
+    <div class="field"><label>參加對象</label><input id="actTarget" placeholder="例：G12 兩班學生"></div>
+    <div class="field"><label>科目</label><input id="actSubject" placeholder="例：英文科"></div>
+    <div class="field"><label>當班老師</label><input id="actTeacher" placeholder="例：Tom Mauborgne"></div>
+  </div>
+
+  <!-- 固定成本 -->
+  <section class="block">
+    <div class="block-head">
+      <span class="num">1</span>
+      <h2>固定成本</h2>
+      <span class="sub">— 由全體學生分攤（車資、人事等一次性支出）</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:16%">類別</th>
+          <th style="width:24%">成本項目</th>
+          <th style="width:8%">單位</th>
+          <th style="width:9%" class="num">數量</th>
+          <th style="width:11%" class="num">單價</th>
+          <th style="width:12%" class="num">小計</th>
+          <th>備註</th>
+          <th style="width:30px"></th>
+        </tr>
+      </thead>
+      <tbody id="fixedBody"></tbody>
+    </table>
+    <div class="table-foot">
+      <button class="add-row-btn" onclick="addRow('fixedBody')">＋ 新增項目</button>
+      <div class="row-total">固定成本合計　<b id="fixedTotal">0</b> 元</div>
+    </div>
+    <div class="per-student-line">
+      每位學生分攤固定成本 (A) ＝ 固定成本合計 ÷ 參加人數　＝　<b id="perFixed">0</b> 元
+    </div>
+  </section>
+
+  <!-- 變動成本 -->
+  <section class="block">
+    <div class="block-head">
+      <span class="num">2</span>
+      <h2>變動成本</h2>
+      <span class="sub">— 依每位學生計算（門票、餐費、保險等個人費用）</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:16%">類別</th>
+          <th style="width:24%">成本項目</th>
+          <th style="width:8%">單位</th>
+          <th style="width:9%" class="num">數量</th>
+          <th style="width:11%" class="num">單價</th>
+          <th style="width:12%" class="num">小計</th>
+          <th>備註</th>
+          <th style="width:30px"></th>
+        </tr>
+      </thead>
+      <tbody id="varBody"></tbody>
+    </table>
+    <div class="table-foot">
+      <button class="add-row-btn" onclick="addRow('varBody')">＋ 新增項目</button>
+      <div class="row-total">每人變動成本合計 (B)　<b id="varTotal">0</b> 元</div>
+    </div>
+  </section>
+
+  <!-- 成本加成定價建議 -->
+  <section class="block">
+    <div class="block-head">
+      <span class="num">3</span>
+      <h2>成本加成定價建議</h2>
+      <span class="sub">— 用加成比例反推建議售價，可套用到下方實際收費</span>
+    </div>
+    <div class="info-card" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));align-items:end;">
+      <div class="field">
+        <label>每人總成本 (A+B)</label>
+        <input id="markupCostDisplay" value="0" disabled style="font-family:'IBM Plex Mono',monospace;color:var(--text-mute);">
+      </div>
+      <div class="field">
+        <label>成本加成比例 (%)</label>
+        <input id="markupPercent" type="number" value="7">
+      </div>
+      <div class="field">
+        <label>建議售價 / 人</label>
+        <input id="suggestedPrice" value="0" disabled style="font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--ink-dark);">
+      </div>
+      <div class="field">
+        <label>&nbsp;</label>
+        <button class="add-row-btn" style="border-color:var(--gold);color:var(--ink-dark);" onclick="applyMarkup()">套用此售價 →</button>
+      </div>
+    </div>
+    <div class="per-student-line">
+      以建議售價計算，本次活動預計總盈餘　＝　<b id="markupSurplus">0</b> 元
+    </div>
+  </section>
+
+  <!-- 收費與盈餘 -->
+  <section class="block">
+    <div class="block-head">
+      <span class="num">4</span>
+      <h2>收費與盈餘試算</h2>
+      <span class="sub">— 依實際訂定的收費標準計算</span>
+    </div>
+
+    <div class="receipt">
+      <h2>成本 ‧ 收費總覽</h2>
+
+      <div class="receipt-row">
+        <span>每人固定成本 (A)</span>
+        <span class="val" id="rA">0 元</span>
+      </div>
+      <div class="receipt-row">
+        <span>每人變動成本 (B)</span>
+        <span class="val" id="rB">0 元</span>
+      </div>
+      <div class="receipt-row total">
+        <span>每人總成本 (A + B)</span>
+        <span class="val" id="rTotal">0 元</span>
+      </div>
+
+      <div class="receipt-row editable" style="margin-top:14px;">
+        <span>學生收費標準（元 / 人）</span>
+        <input id="charge" type="number" value="450">
+      </div>
+      <div class="receipt-row editable">
+        <span>參加人數</span>
+        <input id="studentCount" type="number" value="25">
+      </div>
+      <div class="receipt-row editable">
+        <span>最低舉辦人數</span>
+        <input id="minCount" type="number" value="24">
+      </div>
+
+      <div class="receipt-row" style="margin-top:14px;">
+        <span>活動總收入（收費 × 人數）</span>
+        <span class="val" id="totalRevenue">0 元</span>
+      </div>
+      <div class="receipt-row">
+        <span>活動總支出（總成本 × 人數）</span>
+        <span class="val" id="totalExpense">0 元</span>
+      </div>
+
+      <div class="receipt-final profit" id="finalBox">
+        <span class="label">預計淨盈餘（虧損）</span>
+        <span class="amount" id="finalAmount">0 元</span>
+      </div>
+      <div class="warn" id="warnMin">⚠ 目前參加人數低於最低舉辦人數，活動可能取消。</div>
+    </div>
+
+    <button class="print-btn" onclick="window.print()">🖨 列印 / 存成 PDF</button>
+  </section>
+
+</div>
+
+<script>
+let rowId = 0;
+
+function makeRow(tbodyId, data){
+  data = data || {cat:'',item:'',unit:'',qty:1,price:0,note:''};
+  const tbody = document.getElementById(tbodyId);
+  const tr = document.createElement('tr');
+  tr.dataset.id = ++rowId;
+  tr.innerHTML = `
+    <td><input class="cat" value="${data.cat}" placeholder="類別"></td>
+    <td><input class="item" value="${data.item}" placeholder="項目名稱"></td>
+    <td><input class="unit" value="${data.unit}" placeholder="單位"></td>
+    <td class="num"><input class="qty" type="number" value="${data.qty}"></td>
+    <td class="num"><input class="price" type="number" value="${data.price}"></td>
+    <td class="num subtotal-cell">0</td>
+    <td><input class="note" value="${data.note}" placeholder="備註"></td>
+    <td><button class="del-btn" onclick="delRow(this)">✕</button></td>
+  `;
+  tbody.appendChild(tr);
+  tr.querySelectorAll('input').forEach(inp=>inp.addEventListener('input', recalc));
+}
+
+function addRow(tbodyId){
+  makeRow(tbodyId);
+  recalc();
+}
+
+function delRow(btn){
+  btn.closest('tr').remove();
+  recalc();
+}
+
+function sumTable(tbodyId){
+  let total = 0;
+  document.querySelectorAll('#'+tbodyId+' tr').forEach(tr=>{
+    const qty = parseFloat(tr.querySelector('.qty').value) || 0;
+    const price = parseFloat(tr.querySelector('.price').value) || 0;
+    const sub = qty * price;
+    tr.querySelector('.subtotal-cell').textContent = sub.toLocaleString('en-US',{maximumFractionDigits:0});
+    total += sub;
+  });
+  return total;
+}
+
+function fmt(n){
+  n = Math.round(n);
+  return n.toLocaleString('en-US',{maximumFractionDigits:0});
+}
+
+function recalc(){
+  const studentCount = parseFloat(document.getElementById('studentCount').value) || 1;
+  const minCount = parseFloat(document.getElementById('minCount').value) || 0;
+  const charge = parseFloat(document.getElementById('charge').value) || 0;
+
+  const fixedTotal = sumTable('fixedBody');
+  const varTotal = sumTable('varBody');
+
+  const perFixed = Math.round(fixedTotal / studentCount); // 先四捨五入為整數元，比照原表算法
+  const perVar = Math.round(varTotal); // variable rows are already per-student units
+  const perTotal = perFixed + perVar;
+
+  document.getElementById('fixedTotal').textContent = fmt(fixedTotal);
+  document.getElementById('perFixed').textContent = fmt(perFixed);
+  document.getElementById('varTotal').textContent = fmt(perVar);
+
+  document.getElementById('rA').textContent = fmt(perFixed) + ' 元';
+  document.getElementById('rB').textContent = fmt(perVar) + ' 元';
+  document.getElementById('rTotal').textContent = fmt(perTotal) + ' 元';
+
+  // 活動總收入 / 總支出
+  const totalRevenue = studentCount * charge;
+  const totalExpense = studentCount * perTotal;
+  document.getElementById('totalRevenue').textContent = fmt(totalRevenue) + ' 元';
+  document.getElementById('totalExpense').textContent = fmt(totalExpense) + ' 元';
+
+  const surplus = totalRevenue - totalExpense;
+  const finalBox = document.getElementById('finalBox');
+  const finalAmount = document.getElementById('finalAmount');
+  finalAmount.textContent = fmt(Math.abs(surplus)) + ' 元' + (surplus < 0 ? '（虧損）' : '');
+  finalBox.classList.toggle('loss', surplus < 0);
+  finalBox.classList.toggle('profit', surplus >= 0);
+
+  document.getElementById('warnMin').classList.toggle('show', studentCount < minCount);
+
+  // 成本加成定價建議
+  const markupPercent = parseFloat(document.getElementById('markupPercent').value) || 0;
+  const suggestedPrice = perTotal * (1 + markupPercent / 100);
+  document.getElementById('markupCostDisplay').value = fmt(perTotal);
+  document.getElementById('suggestedPrice').value = fmt(suggestedPrice);
+  const markupSurplus = studentCount * (suggestedPrice - perTotal);
+  document.getElementById('markupSurplus').textContent = fmt(markupSurplus);
+}
+
+function applyMarkup(){
+  const suggested = parseFloat(document.getElementById('suggestedPrice').value.replace(/,/g,'')) || 0;
+  document.getElementById('charge').value = Math.round(suggested);
+  recalc();
+}
+
+// init default rows based on the reference worksheet
+makeRow('fixedBody', {cat:'交通成本', item:'遊覽車', unit:'台', qty:1, price:5000, note:'大巴來回費用'});
+makeRow('fixedBody', {cat:'人事成本', item:'帶隊老師 / 行政保險', unit:'人', qty:2, price:30, note:'任課老師＋行政老師'});
+makeRow('fixedBody', {cat:'導覽費用', item:'團體導覽預約費', unit:'場', qty:0, price:0, note:''});
+
+makeRow('varBody', {cat:'學生費用', item:'門票', unit:'人', qty:1, price:0, note:''});
+makeRow('varBody', {cat:'學生費用', item:'保險費', unit:'人', qty:1, price:30, note:'旅行平安保險'});
+makeRow('varBody', {cat:'學生費用', item:'午餐（麥當勞／便當）', unit:'人', qty:0, price:0, note:''});
+
+['studentCount','minCount','charge','markupPercent'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+document.getElementById('today').textContent =
+  '製表日期：' + new Date().toLocaleDateString('zh-TW');
+
+recalc();
+</script>
+</body>
+</html>
