@@ -1,0 +1,948 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>學習小鴨池</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&display=swap');
+
+:root {
+  --paper: #F7F2E9;
+  --card: #FFFDF8;
+  --ink: #3B362E;
+  --ink-soft: #6B6255;
+  --line: #E6DDC9;
+  --gold: #C99A44;
+  --gold-soft: #E9D3A0;
+  --pond: #5C8A83;
+  --terracotta: #BE6248;
+  --sage: #8A9A5B;
+  --plum: #6B5B7B;
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  font-family: 'Work Sans', sans-serif;
+  background: var(--paper);
+  background-image: radial-gradient(circle at 15% 8%, rgba(201,154,68,0.07), transparent 40%),
+                     radial-gradient(circle at 85% 92%, rgba(92,138,131,0.07), transparent 45%);
+  color: var(--ink);
+  min-height: 100vh;
+}
+#app { padding: 32px 24px 60px; max-width: 1080px; margin: 0 auto; }
+
+h1, h2, h3, h4 { font-family: 'Fraunces', serif; font-weight: 600; letter-spacing: -0.01em; margin: 0; }
+
+/* ---------- header ---------- */
+.duck-header {
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 18px; margin-bottom: 28px;
+  padding-bottom: 20px; border-bottom: 1px solid var(--line);
+}
+.duck-header-left { display: flex; align-items: center; gap: 14px; }
+.duck-header-left h1 { font-size: 28px; color: var(--ink); }
+.duck-sub { margin: 4px 0 0; font-size: 13px; color: var(--ink-soft); letter-spacing: 0.02em; }
+
+.duck-tabs { display: flex; gap: 4px; }
+.duck-tabs button {
+  border: none; background: transparent; padding: 9px 18px;
+  border-radius: 999px; font-family: 'Work Sans'; font-weight: 600;
+  color: var(--ink-soft); cursor: pointer; font-size: 14px;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.duck-tabs button.active { background: var(--ink); color: var(--paper); }
+.duck-tabs button:hover:not(.active) { background: var(--line); color: var(--ink); }
+
+/* ---------- layout ---------- */
+.duck-main { display: flex; flex-direction: column; gap: 24px; }
+.tab-panel { display: none; flex-direction: column; gap: 24px; animation: fadeIn 0.35s ease; }
+.tab-panel.active { display: flex; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(6px);} to { opacity: 1; transform: translateY(0);} }
+
+.card {
+  background: var(--card); border-radius: 18px; padding: 24px 28px;
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px rgba(59,54,46,0.05);
+}
+
+/* ---------- pond / streak ---------- */
+.pond-card-title { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 18px; }
+.pond-card-title h3 { font-size: 19px; }
+.pond-sub { font-size: 12px; color: var(--ink-soft); }
+.pond-row { display: flex; gap: 10px; overflow-x: auto; padding: 10px 4px 6px; }
+.lily-wrap { position: relative; flex-shrink: 0; }
+.lily-duck { position: absolute; top: -26px; left: 2px; }
+
+/* ---------- stat row ---------- */
+.stat-row { display: flex; gap: 18px; flex-wrap: wrap; }
+.stat-card { flex: 1; min-width: 150px; text-align: left; }
+.stat-num { display: block; font-family: 'Fraunces', serif; font-size: 32px; color: var(--terracotta); font-variant-numeric: tabular-nums; }
+.stat-label { font-size: 12.5px; color: var(--ink-soft); }
+
+/* ---------- goals ---------- */
+.goals-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.goals-header h3 { font-size: 19px; }
+.link-btn { background: none; border: none; color: var(--pond); font-family: 'Work Sans'; font-weight: 600; font-size: 13px; cursor: pointer; text-decoration: underline; text-underline-offset: 3px; }
+
+.goal-bars { display: flex; flex-direction: column; gap: 14px; }
+.goal-row { display: flex; align-items: center; gap: 12px; }
+.goal-label { width: 88px; font-size: 13px; font-weight: 600; color: var(--ink); flex-shrink: 0; }
+.goal-track { flex: 1; height: 10px; background: var(--line); border-radius: 999px; overflow: hidden; }
+.goal-fill { height: 100%; border-radius: 999px; transition: width 0.5s ease; }
+.goal-value { width: 90px; text-align: right; font-size: 12px; color: var(--ink-soft); flex-shrink: 0; font-variant-numeric: tabular-nums; }
+
+.toeic-card { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px; background: linear-gradient(135deg, #6B5B7B, #83719A); color: #F7F2E9; }
+.toeic-card h3 { color: #F7F2E9; font-size: 18px; }
+.toeic-left p { margin: 4px 0 0; font-size: 13px; color: #E3DAF0; }
+.toeic-right { text-align: right; }
+.toeic-days { font-family: 'Fraunces'; font-size: 34px; font-variant-numeric: tabular-nums; }
+.toeic-days-label { font-size: 12px; color: #E3DAF0; }
+
+/* ---------- charts ---------- */
+.charts-row { display: flex; gap: 18px; flex-wrap: wrap; }
+.chart-card { flex: 1; min-width: 280px; }
+.chart-card h3 { font-size: 16px; margin-bottom: 12px; }
+.chart-card canvas { max-height: 220px; }
+
+/* ---------- suggestions ---------- */
+.suggest-card { background: #FBF6EA; border-color: var(--gold-soft); }
+.suggest-title { display: flex; align-items: center; gap: 8px; font-family: 'Fraunces'; color: #8A6A26; margin-bottom: 10px; font-size: 17px; }
+.suggest-card ul { margin: 0; padding-left: 20px; }
+.suggest-card li { margin-bottom: 7px; font-size: 14px; color: #6B5426; line-height: 1.5; }
+
+/* ---------- daily word ---------- */
+.word-card { display: flex; gap: 20px; align-items: flex-start; flex-wrap: wrap; }
+.word-main { flex: 1; min-width: 220px; }
+.word-eyebrow { font-size: 12px; letter-spacing: 0.08em; color: var(--ink-soft); text-transform: uppercase; }
+.word-title { font-size: 30px; margin: 6px 0 8px; color: var(--ink); }
+.word-pos { font-size: 12px; color: var(--pond); font-weight: 600; margin-right: 8px; }
+.word-meaning { font-size: 15px; color: var(--ink); margin: 6px 0; }
+.word-example { font-size: 14px; color: var(--ink-soft); font-style: italic; margin: 10px 0 4px; line-height: 1.55; }
+.word-example-zh { font-size: 13px; color: var(--ink-soft); margin: 0; }
+.word-actions { display: flex; flex-direction: column; gap: 8px; }
+
+/* ---------- buttons ---------- */
+.btn-primary {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: var(--terracotta); color: #FFF9F2; border: none; padding: 11px 20px;
+  border-radius: 999px; font-family: 'Work Sans'; font-weight: 700;
+  cursor: pointer; font-size: 14px; align-self: flex-start;
+  box-shadow: 0 6px 16px rgba(190,98,72,0.28);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(190,98,72,0.35); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ghost {
+  background: transparent; border: 1px solid var(--line); color: var(--ink-soft);
+  padding: 10px 18px; border-radius: 999px; font-family: 'Work Sans'; font-weight: 600; cursor: pointer;
+}
+.btn-ghost:hover { border-color: var(--ink-soft); color: var(--ink); }
+
+/* ---------- lists ---------- */
+.entry-list, .explore-list { display: flex; flex-direction: column; gap: 12px; }
+.empty-hint { color: var(--ink-soft); font-size: 14px; }
+
+.entry-item, .explore-item { padding: 16px 20px; }
+.entry-item-top { display: flex; align-items: center; gap: 10px; }
+.entry-date { font-weight: 700; font-family: 'Fraunces'; color: var(--ink); }
+.entry-minutes { color: var(--ink-soft); font-size: 13px; margin-left: auto; font-variant-numeric: tabular-nums; }
+.entry-delete { background: none; border: none; color: var(--terracotta); cursor: pointer; padding: 4px; font-size: 15px; opacity: 0.7; }
+.entry-delete:hover { opacity: 1; }
+.entry-skills { display: flex; gap: 6px; margin: 10px 0 4px; flex-wrap: wrap; }
+.skill-chip { color: #FFF9F2; font-size: 11.5px; padding: 4px 11px; border-radius: 999px; font-weight: 600; letter-spacing: 0.01em; }
+.entry-note { font-size: 14px; color: var(--ink-soft); margin: 6px 0 0; line-height: 1.5; }
+.entry-vocab { font-size: 12.5px; color: var(--gold); font-weight: 600; margin: 6px 0 0; }
+
+.explore-intro { color: var(--ink-soft); font-size: 14px; margin: 0; }
+.explore-item-top { display: flex; justify-content: space-between; align-items: center; }
+.explore-item h4 { margin: 10px 0 4px; font-size: 16px; }
+.explore-item p { margin: 0; font-size: 13px; color: var(--ink-soft); }
+
+/* ---------- forms ---------- */
+.duck-form { display: flex; flex-direction: column; gap: 14px; animation: fadeIn 0.3s ease; }
+.duck-form.hidden { display: none; }
+.duck-form-header { display: flex; justify-content: space-between; align-items: center; }
+.duck-form-header h3 { font-size: 18px; }
+.duck-form-header button { background: none; border: none; cursor: pointer; color: var(--ink-soft); font-size: 16px; }
+.duck-form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--ink-soft); font-weight: 600; }
+.duck-form input, .duck-form textarea {
+  font-family: 'Work Sans'; border: 1px solid var(--line); border-radius: 10px;
+  padding: 9px 12px; font-size: 14px; color: var(--ink); resize: vertical; background: #FFFEFB;
+}
+.duck-form input:focus, .duck-form textarea:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 3px rgba(201,154,68,0.15); }
+.chip-select { display: flex; gap: 8px; flex-wrap: wrap; }
+.chip-option {
+  border: 1px solid var(--line); background: #FFFEFB; padding: 7px 15px;
+  border-radius: 999px; font-size: 13px; cursor: pointer; color: var(--ink-soft); font-weight: 600;
+  transition: all 0.15s ease;
+}
+.chip-option.selected { color: #FFF9F2; border-color: transparent; }
+.duck-form-actions { display: flex; gap: 10px; }
+.form-hint { font-size: 12px; color: var(--terracotta); margin: 0; }
+.duck-save-warning {
+  background: #F7E3D9; color: #8A4B14; padding: 10px 16px;
+  border-radius: 12px; margin-bottom: 16px; font-size: 13px; display: none;
+}
+.goal-form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+
+@media (max-width: 640px) {
+  .duck-header { flex-direction: column; align-items: flex-start; }
+  .duck-tabs { width: 100%; overflow-x: auto; }
+  .goal-form-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="duck-save-warning" id="saveWarning">資料儲存暫時失敗，請確認瀏覽器允許本機儲存（localStorage）。</div>
+
+  <header class="duck-header">
+    <div class="duck-header-left">
+      <span id="mascotHeader"></span>
+      <div>
+        <h1>學習小鴨池</h1>
+        <p class="duck-sub">英文學習追蹤儀表板</p>
+      </div>
+    </div>
+    <nav class="duck-tabs">
+      <button data-tab="dashboard" class="active">總覽</button>
+      <button data-tab="log">學習紀錄</button>
+      <button data-tab="explore">探索清單</button>
+    </nav>
+  </header>
+
+  <main class="duck-main">
+
+    <section id="panel-dashboard" class="tab-panel active">
+
+      <div class="card word-card" id="wordCard"></div>
+
+      <div class="card">
+        <div class="pond-card-title">
+          <h3 id="streakText">連續學習 0 天</h3>
+          <span class="pond-sub">最近 14 天足跡</span>
+        </div>
+        <div class="pond-row" id="pondRow"></div>
+      </div>
+
+      <div class="stat-row">
+        <div class="card stat-card">
+          <span class="stat-num" id="statWeekMinutes">0</span>
+          <span class="stat-label">本週學習分鐘</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-num" id="statEntryCount">0</span>
+          <span class="stat-label">累積紀錄筆數</span>
+        </div>
+        <div class="card stat-card">
+          <span class="stat-num" id="statVocabCount">0</span>
+          <span class="stat-label">累積背誦單字</span>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="goals-header">
+          <h3>本週目標進度</h3>
+          <button class="link-btn" id="openGoalForm">編輯目標</button>
+        </div>
+        <div class="goal-bars" id="goalBars"></div>
+      </div>
+
+      <div class="duck-form hidden card" id="goalForm">
+        <div class="duck-form-header">
+          <h3>編輯本週目標</h3>
+          <button id="closeGoalForm">✕</button>
+        </div>
+        <div class="goal-form-grid" id="goalFormFields"></div>
+        <label>多益目標分數
+          <input type="number" id="goalToeicScore" min="10" max="990" step="5" />
+        </label>
+        <label>預計應考日期
+          <input type="date" id="goalToeicDate" />
+        </label>
+        <div class="duck-form-actions">
+          <button class="btn-primary" id="submitGoals">儲存目標</button>
+          <button class="btn-ghost" id="cancelGoals">取消</button>
+        </div>
+      </div>
+
+      <div class="card toeic-card" id="toeicCard"></div>
+
+      <div class="charts-row">
+        <div class="card chart-card">
+          <h3>本週各技能練習分鐘</h3>
+          <canvas id="skillChart"></canvas>
+        </div>
+        <div class="card chart-card">
+          <h3>近 14 天每日時數</h3>
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+
+      <div class="card suggest-card">
+        <div class="suggest-title">✦ <span>小鴨的建議</span></div>
+        <ul id="suggestList"></ul>
+      </div>
+    </section>
+
+    <section id="panel-log" class="tab-panel">
+      <button class="btn-primary" id="openEntryForm">＋ 新增學習紀錄</button>
+
+      <div class="duck-form hidden card" id="entryForm">
+        <div class="duck-form-header">
+          <h3>新增學習紀錄</h3>
+          <button id="closeEntryForm">✕</button>
+        </div>
+        <label>日期
+          <input type="date" id="entryDate" />
+        </label>
+        <label>技能類別（可複選）
+          <div class="chip-select" id="entrySkillChips"></div>
+        </label>
+        <label>花費時間（分鐘）
+          <input type="number" id="entryMinutes" min="1" value="20" />
+        </label>
+        <label id="vocabCountWrap" style="display:none;">單字量（背了幾個單字）
+          <input type="number" id="entryVocabCount" min="0" value="0" />
+        </label>
+        <label>內容 / 心得
+          <textarea id="entryNote" rows="3" placeholder="例如：聽了 EP12 的 Podcast，精聽兩遍"></textarea>
+        </label>
+        <div class="duck-form-actions">
+          <button class="btn-primary" id="submitEntry">儲存</button>
+          <button class="btn-ghost" id="cancelEntry">取消</button>
+        </div>
+        <p class="form-hint" id="entryHint" style="display:none;">請至少選一個技能類別</p>
+      </div>
+
+      <div class="entry-list" id="entryList"></div>
+    </section>
+
+    <section id="panel-explore" class="tab-panel">
+      <p class="explore-intro">還沒決定要用哪個資源？先放進這裡，等真的開始練習了，再到「學習紀錄」正式打卡。</p>
+      <button class="btn-primary" id="openExploreForm">＋ 新增待嘗試資源</button>
+
+      <div class="duck-form hidden card" id="exploreForm">
+        <div class="duck-form-header">
+          <h3>新增待嘗試資源</h3>
+          <button id="closeExploreForm">✕</button>
+        </div>
+        <label>分類
+          <div class="chip-select" id="exploreCategoryChips"></div>
+        </label>
+        <label>名稱
+          <input id="exploreName" placeholder="例如：某某 Podcast、某口說課程" />
+        </label>
+        <label>備註
+          <textarea id="exploreNote" rows="2" placeholder="例如：朋友推薦，還沒試聽"></textarea>
+        </label>
+        <div class="duck-form-actions">
+          <button class="btn-primary" id="submitExplore">加入清單</button>
+          <button class="btn-ghost" id="cancelExplore">取消</button>
+        </div>
+      </div>
+
+      <div class="explore-list" id="exploreList"></div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+// ==================== VOCAB BANK (TOEIC core, ~160 words) ====================
+const VOCAB_BANK = [
+  {w:"agenda",pos:"n.",m:"議程；待辦事項",ex:"Please review the agenda before tomorrow's meeting.",exz:"請在明天開會前先看過議程。"},
+  {w:"amenities",pos:"n.",m:"（飯店等的）設施",ex:"The hotel offers amenities such as a gym and a pool.",exz:"這間飯店提供健身房和泳池等設施。"},
+  {w:"appliance",pos:"n.",m:"家電用品",ex:"The store sells a wide range of kitchen appliances.",exz:"這家店販售各種廚房家電。"},
+  {w:"applicant",pos:"n.",m:"申請人；求職者",ex:"Each applicant must submit a resume and cover letter.",exz:"每位申請人都必須繳交履歷與求職信。"},
+  {w:"appraisal",pos:"n.",m:"評估；估價",ex:"The manager conducts a performance appraisal every year.",exz:"經理每年都會進行績效評估。"},
+  {w:"approve",pos:"v.",m:"批准；核准",ex:"The board approved the new budget proposal.",exz:"董事會批准了新的預算提案。"},
+  {w:"asset",pos:"n.",m:"資產；有價值的人事物",ex:"Good communication skills are a valuable asset in this job.",exz:"良好的溝通能力在這份工作中是寶貴的資產。"},
+  {w:"attain",pos:"v.",m:"達成；獲得",ex:"The team worked hard to attain its sales target.",exz:"團隊努力達成銷售目標。"},
+  {w:"audit",pos:"n./v.",m:"稽核；審計",ex:"An external firm will audit the company's finances.",exz:"一家外部公司將審計這家公司的財務。"},
+  {w:"beneficial",pos:"adj.",m:"有益的",ex:"Regular exercise is beneficial to your health.",exz:"規律運動有益健康。"},
+  {w:"boost",pos:"v.",m:"提升；促進",ex:"The new campaign helped boost sales significantly.",exz:"新的宣傳活動大幅提升了銷售額。"},
+  {w:"brochure",pos:"n.",m:"小冊子；宣傳手冊",ex:"You can find more details in our product brochure.",exz:"你可以在我們的產品手冊中找到更多細節。"},
+  {w:"budget",pos:"n.",m:"預算",ex:"We need to stay within the marketing budget.",exz:"我們必須控制在行銷預算之內。"},
+  {w:"candidate",pos:"n.",m:"候選人",ex:"Three candidates were shortlisted for the position.",exz:"有三位候選人進入了這個職位的最終名單。"},
+  {w:"clarify",pos:"v.",m:"澄清；說明",ex:"Could you clarify what you meant by that comment?",exz:"你能澄清一下那個評論的意思嗎？"},
+  {w:"collaborate",pos:"v.",m:"合作",ex:"The two departments collaborated on the new project.",exz:"這兩個部門合作完成了這項新專案。"},
+  {w:"commence",pos:"v.",m:"開始",ex:"The construction work will commence next Monday.",exz:"施工工程將於下週一開始。"},
+  {w:"commodity",pos:"n.",m:"商品；日用品",ex:"Coffee is one of the most traded commodities in the world.",exz:"咖啡是世界上交易量最大的商品之一。"},
+  {w:"compensate",pos:"v.",m:"補償",ex:"The airline offered to compensate passengers for the delay.",exz:"航空公司提出要補償乘客延誤的損失。"},
+  {w:"compile",pos:"v.",m:"彙編；整理",ex:"She compiled all the survey results into one report.",exz:"她把所有的調查結果彙整成一份報告。"},
+  {w:"comply",pos:"v.",m:"遵守；符合",ex:"All employees must comply with the safety regulations.",exz:"所有員工都必須遵守安全規定。"},
+  {w:"consecutive",pos:"adj.",m:"連續的",ex:"This is the third consecutive year of profit growth.",exz:"這是連續第三年獲利成長。"},
+  {w:"consent",pos:"n./v.",m:"同意；許可",ex:"The doctor needs your consent before the procedure.",exz:"醫生在進行手術前需要你的同意。"},
+  {w:"consult",pos:"v.",m:"諮詢；請教",ex:"Please consult the manual before installing the software.",exz:"安裝軟體前請先查閱手冊。"},
+  {w:"contractor",pos:"n.",m:"承包商",ex:"The company hired a contractor to renovate the office.",exz:"公司聘請了一家承包商來翻修辦公室。"},
+  {w:"contribute",pos:"v.",m:"貢獻；捐助",ex:"Every team member contributed to the project's success.",exz:"每位團隊成員都為專案的成功做出了貢獻。"},
+  {w:"convene",pos:"v.",m:"召集；集會",ex:"The committee will convene to discuss the proposal.",exz:"委員會將召開會議討論這項提案。"},
+  {w:"corporate",pos:"adj.",m:"公司的；企業的",ex:"The corporate headquarters is located downtown.",exz:"公司總部位於市中心。"},
+  {w:"credential",pos:"n.",m:"資格；證書",ex:"Applicants should list their academic credentials.",exz:"申請人應列出他們的學歷資格。"},
+  {w:"customary",pos:"adj.",m:"習慣上的；慣例的",ex:"It is customary to tip the waiter in this country.",exz:"在這個國家，習慣上要給服務生小費。"},
+  {w:"deduct",pos:"v.",m:"扣除",ex:"Taxes will be deducted from your monthly salary.",exz:"稅金將從你的月薪中扣除。"},
+  {w:"defective",pos:"adj.",m:"有瑕疵的",ex:"The customer returned the defective product for a refund.",exz:"顧客退回了有瑕疵的產品要求退款。"},
+  {w:"delegate",pos:"v./n.",m:"委派；代表",ex:"The manager delegated the task to her assistant.",exz:"經理把這項任務委派給她的助理。"},
+  {w:"deploy",pos:"v.",m:"部署；配置",ex:"The company plans to deploy new software next quarter.",exz:"公司計畫在下季部署新的軟體。"},
+  {w:"designate",pos:"v.",m:"指定；指派",ex:"He was designated as the project leader.",exz:"他被指定為專案負責人。"},
+  {w:"disburse",pos:"v.",m:"支付；發放",ex:"Funds will be disbursed once the contract is signed.",exz:"合約簽署後將撥付款項。"},
+  {w:"discrepancy",pos:"n.",m:"差異；不一致",ex:"There is a discrepancy between the two reports.",exz:"這兩份報告之間存在差異。"},
+  {w:"dispatch",pos:"v.",m:"派遣；發送",ex:"The company dispatched a technician to fix the issue.",exz:"公司派遣了一名技術人員來解決問題。"},
+  {w:"draft",pos:"n./v.",m:"草稿；起草",ex:"She wrote a draft of the proposal for feedback.",exz:"她寫了一份提案草稿以便收集意見。"},
+  {w:"efficient",pos:"adj.",m:"有效率的",ex:"The new system makes the workflow more efficient.",exz:"新系統讓工作流程更有效率。"},
+  {w:"enclose",pos:"v.",m:"隨函附上",ex:"Please find the invoice enclosed with this letter.",exz:"請查收隨信附上的發票。"},
+  {w:"endorse",pos:"v.",m:"背書；認可",ex:"The celebrity agreed to endorse the new product.",exz:"這位名人同意為這項新產品代言。"},
+  {w:"enroll",pos:"v.",m:"註冊；報名",ex:"Students can enroll in the course online.",exz:"學生可以線上報名這門課程。"},
+  {w:"entitle",pos:"v.",m:"使有資格",ex:"This coupon entitles you to a 20% discount.",exz:"這張優惠券讓你有資格享有八折優惠。"},
+  {w:"esteem",pos:"n.",m:"尊重；敬重",ex:"She is held in high esteem by her colleagues.",exz:"她深受同事的敬重。"},
+  {w:"estimate",pos:"n./v.",m:"估計；估價",ex:"The contractor gave us an estimate for the repairs.",exz:"承包商給了我們維修的估價。"},
+  {w:"evaluate",pos:"v.",m:"評估",ex:"Managers evaluate employee performance twice a year.",exz:"經理每年評估員工績效兩次。"},
+  {w:"exceed",pos:"v.",m:"超過",ex:"Sales this quarter exceeded our expectations.",exz:"本季銷售超出了我們的預期。"},
+  {w:"exempt",pos:"adj./v.",m:"豁免的；免除",ex:"Non-profit organizations are exempt from this tax.",exz:"非營利組織可豁免這項稅務。"},
+  {w:"expedite",pos:"v.",m:"加速；促進",ex:"We can expedite shipping for an additional fee.",exz:"加付費用可以加速出貨。"},
+  {w:"expire",pos:"v.",m:"到期；失效",ex:"Your membership will expire at the end of this month.",exz:"你的會員資格將於本月底到期。"},
+  {w:"facilitate",pos:"v.",m:"促進；使便利",ex:"The new app facilitates communication between teams.",exz:"這款新應用程式促進了團隊間的溝通。"},
+  {w:"feasible",pos:"adj.",m:"可行的",ex:"The engineers confirmed the plan was feasible.",exz:"工程師確認這項計畫是可行的。"},
+  {w:"finalize",pos:"v.",m:"完成；定案",ex:"We need to finalize the contract by Friday.",exz:"我們需要在週五前把合約定案。"},
+  {w:"flexible",pos:"adj.",m:"有彈性的",ex:"The company offers flexible working hours.",exz:"這家公司提供彈性的工作時間。"},
+  {w:"forecast",pos:"n./v.",m:"預測",ex:"Analysts forecast steady growth next year.",exz:"分析師預測明年將穩定成長。"},
+  {w:"fund",pos:"n./v.",m:"資金；資助",ex:"The project is funded by a private investor.",exz:"這項專案由一位私人投資者出資。"},
+  {w:"generate",pos:"v.",m:"產生；創造",ex:"The new store generated a lot of local interest.",exz:"這家新店吸引了許多當地人的興趣。"},
+  {w:"genuine",pos:"adj.",m:"真正的；真誠的",ex:"The manager showed genuine concern for the staff.",exz:"經理對員工展現了真誠的關心。"},
+  {w:"grant",pos:"v./n.",m:"授予；補助金",ex:"The university was granted funding for research.",exz:"這所大學獲得了研究經費。"},
+  {w:"guarantee",pos:"n./v.",m:"保證",ex:"The product comes with a two-year guarantee.",exz:"這項產品附有兩年保固。"},
+  {w:"hospitality",pos:"n.",m:"款待；殷勤",ex:"We appreciate your hospitality during our visit.",exz:"我們很感謝您在我們造訪期間的殷勤款待。"},
+  {w:"implement",pos:"v.",m:"實施；執行",ex:"The company will implement the new policy next month.",exz:"公司將於下個月實施這項新政策。"},
+  {w:"inaugurate",pos:"v.",m:"開幕；就職",ex:"The mayor will inaugurate the new library tomorrow.",exz:"市長明天將為新圖書館揭幕。"},
+  {w:"incentive",pos:"n.",m:"獎勵；誘因",ex:"The company offers incentives for top performers.",exz:"公司為表現優異的員工提供獎勵。"},
+  {w:"inquire",pos:"v.",m:"詢問",ex:"Feel free to inquire about our services anytime.",exz:"歡迎隨時詢問我們的服務項目。"},
+  {w:"inspect",pos:"v.",m:"檢查",ex:"Officials inspected the factory for safety violations.",exz:"官員檢查了這間工廠是否有違反安全規範。"},
+  {w:"install",pos:"v.",m:"安裝",ex:"A technician will install the new equipment tomorrow.",exz:"技術人員明天會來安裝新設備。"},
+  {w:"invoice",pos:"n.",m:"發票；請款單",ex:"Please send the invoice to our accounting department.",exz:"請將發票寄送給我們的會計部門。"},
+  {w:"itinerary",pos:"n.",m:"行程表",ex:"The travel agency prepared a detailed itinerary for us.",exz:"旅行社為我們準備了詳細的行程表。"},
+  {w:"leverage",pos:"v./n.",m:"善用；槓桿",ex:"The company leveraged social media to reach new customers.",exz:"這家公司善用社群媒體來接觸新顧客。"},
+  {w:"liable",pos:"adj.",m:"應負責的",ex:"The company is liable for any damage caused.",exz:"公司需對造成的任何損害負責。"},
+  {w:"logistics",pos:"n.",m:"物流",ex:"The logistics team handles all shipping arrangements.",exz:"物流團隊負責處理所有出貨安排。"},
+  {w:"maintenance",pos:"n.",m:"維護；保養",ex:"The elevator is closed for routine maintenance.",exz:"電梯因例行保養而暫停使用。"},
+  {w:"mandatory",pos:"adj.",m:"強制的；必須的",ex:"Attendance at the training session is mandatory.",exz:"參加這次訓練是強制性的。"},
+  {w:"merge",pos:"v.",m:"合併",ex:"The two companies merged into one large corporation.",exz:"這兩家公司合併成了一家大企業。"},
+  {w:"negotiate",pos:"v.",m:"協商；談判",ex:"They negotiated a better price with the supplier.",exz:"他們與供應商協商出了更好的價格。"},
+  {w:"notify",pos:"v.",m:"通知",ex:"Please notify us if your address changes.",exz:"如果你的地址有變更，請通知我們。"},
+  {w:"obsolete",pos:"adj.",m:"過時的；淘汰的",ex:"The old machines have become obsolete.",exz:"這些舊機器已經過時了。"},
+  {w:"outsource",pos:"v.",m:"外包",ex:"The firm outsourced its customer service to another company.",exz:"這家公司把客服外包給另一間公司。"},
+  {w:"overdue",pos:"adj.",m:"逾期的；過期未付的",ex:"Your payment is now three weeks overdue.",exz:"你的款項已逾期三週未付。"},
+  {w:"oversee",pos:"v.",m:"監督",ex:"She oversees all operations at the branch office.",exz:"她負責監督分公司的所有營運。"},
+  {w:"peak",pos:"n./adj.",m:"高峰；顛峰的",ex:"Traffic is heaviest during peak hours.",exz:"尖峰時段的交通最為壅塞。"},
+  {w:"pending",pos:"adj.",m:"待處理的；未決的",ex:"Your application is still pending approval.",exz:"你的申請仍在等待核准。"},
+  {w:"permanent",pos:"adj.",m:"永久的",ex:"After the trial period, she got a permanent position.",exz:"試用期結束後，她獲得了正式職位。"},
+  {w:"perspective",pos:"n.",m:"觀點；視角",ex:"He offered a fresh perspective on the issue.",exz:"他對這個議題提出了新的觀點。"},
+  {w:"pertinent",pos:"adj.",m:"相關的；切題的",ex:"Please provide all pertinent documents with your application.",exz:"請在申請時提供所有相關文件。"},
+  {w:"portion",pos:"n.",m:"部分；份量",ex:"A large portion of the budget goes to marketing.",exz:"很大一部分預算用於行銷。"},
+  {w:"prerequisite",pos:"n.",m:"先決條件",ex:"A degree in economics is a prerequisite for this job.",exz:"經濟學學位是這份工作的先決條件。"},
+  {w:"proceed",pos:"v.",m:"繼續進行",ex:"Once approved, we will proceed with construction.",exz:"一旦核准，我們就會繼續施工。"},
+  {w:"proficient",pos:"adj.",m:"熟練的；精通的",ex:"She is proficient in three languages.",exz:"她精通三種語言。"},
+  {w:"prohibit",pos:"v.",m:"禁止",ex:"Smoking is prohibited inside the building.",exz:"建築物內禁止吸菸。"},
+  {w:"prompt",pos:"adj.",m:"迅速的；及時的",ex:"We appreciate your prompt response to our inquiry.",exz:"我們很感謝您對我們詢問的迅速回覆。"},
+  {w:"provision",pos:"n.",m:"條款；供應",ex:"The contract includes a provision for early termination.",exz:"合約中包含提前終止的條款。"},
+  {w:"quota",pos:"n.",m:"配額；定額",ex:"Each salesperson has a monthly sales quota.",exz:"每位業務員都有每月銷售配額。"},
+  {w:"quote",pos:"n./v.",m:"報價；引用",ex:"The supplier sent us a quote for the materials.",exz:"供應商寄給我們材料的報價單。"},
+  {w:"rebate",pos:"n.",m:"回扣；折讓",ex:"Customers can claim a cash rebate after purchase.",exz:"顧客購買後可以申請現金回饋。"},
+  {w:"receipt",pos:"n.",m:"收據",ex:"Please keep your receipt in case you need a refund.",exz:"請保留收據以備退款所需。"},
+  {w:"recipient",pos:"n.",m:"接收者；受贈者",ex:"She was the recipient of an award for excellence.",exz:"她獲得了傑出表現獎。"},
+  {w:"reconcile",pos:"v.",m:"調節；使一致（帳目）",ex:"The accountant reconciled the bank statements.",exz:"會計師核對了銀行對帳單。"},
+  {w:"refund",pos:"n./v.",m:"退款",ex:"You are entitled to a full refund within 30 days.",exz:"你在30天內有權獲得全額退款。"},
+  {w:"refurbish",pos:"v.",m:"翻新；整修",ex:"The old hotel was completely refurbished last year.",exz:"這間老飯店去年進行了全面翻新。"},
+  {w:"regulate",pos:"v.",m:"規範；管制",ex:"This agency regulates food safety standards.",exz:"這個機構負責規範食品安全標準。"},
+  {w:"reimburse",pos:"v.",m:"償還；報銷",ex:"The company will reimburse you for travel expenses.",exz:"公司會報銷你的差旅費用。"},
+  {w:"relevant",pos:"adj.",m:"相關的",ex:"Only relevant experience should be listed on the resume.",exz:"履歷上只應列出相關的經歷。"},
+  {w:"relocate",pos:"v.",m:"搬遷",ex:"The office will relocate to a new building next spring.",exz:"辦公室明年春天將遷至新大樓。"},
+  {w:"reluctant",pos:"adj.",m:"不情願的",ex:"He was reluctant to accept the new assignment.",exz:"他不太願意接受這項新任務。"},
+  {w:"remainder",pos:"n.",m:"剩餘部分",ex:"The remainder of the budget will be used next quarter.",exz:"剩餘的預算將在下一季使用。"},
+  {w:"renew",pos:"v.",m:"更新；續約",ex:"Don't forget to renew your subscription this month.",exz:"別忘了本月要續訂你的訂閱服務。"},
+  {w:"renovate",pos:"v.",m:"翻修",ex:"The restaurant is closed while it is being renovated.",exz:"這間餐廳因翻修而暫停營業。"},
+  {w:"replenish",pos:"v.",m:"補充；補貨",ex:"Staff replenish the shelves every morning.",exz:"員工每天早上補貨上架。"},
+  {w:"representative",pos:"n.",m:"代表；業務員",ex:"A sales representative will contact you shortly.",exz:"業務代表將會盡快與您聯繫。"},
+  {w:"reputable",pos:"adj.",m:"聲譽良好的",ex:"We only work with reputable suppliers.",exz:"我們只與聲譽良好的供應商合作。"},
+  {w:"resign",pos:"v.",m:"辭職",ex:"She decided to resign from her position last week.",exz:"她上週決定辭去她的職位。"},
+  {w:"restrict",pos:"v.",m:"限制",ex:"Access to the lab is restricted to authorized staff.",exz:"實驗室的出入僅限授權人員。"},
+  {w:"resume",pos:"n./v.",m:"履歷；恢復",ex:"Please attach your resume to the application email.",exz:"請將履歷附加在申請信件中。"},
+  {w:"retain",pos:"v.",m:"保留；留住",ex:"The company offers benefits to retain talented staff.",exz:"公司提供福利以留住優秀人才。"},
+  {w:"revenue",pos:"n.",m:"營收",ex:"The company's revenue increased by 15% this year.",exz:"這家公司今年的營收成長了15%。"},
+  {w:"revise",pos:"v.",m:"修訂",ex:"Please revise the draft based on the feedback.",exz:"請根據意見修訂這份草稿。"},
+  {w:"scope",pos:"n.",m:"範圍",ex:"This issue is beyond the scope of our discussion today.",exz:"這個議題超出了我們今天討論的範圍。"},
+  {w:"seminar",pos:"n.",m:"研討會",ex:"She attended a seminar on digital marketing.",exz:"她參加了一場數位行銷的研討會。"},
+  {w:"shipment",pos:"n.",m:"貨運；裝運",ex:"The shipment is expected to arrive next Tuesday.",exz:"這批貨預計於下週二抵達。"},
+  {w:"solicit",pos:"v.",m:"徵求；請求",ex:"The company is soliciting feedback from customers.",exz:"這家公司正在徵求顧客的意見。"},
+  {w:"specify",pos:"v.",m:"明確指出",ex:"Please specify your preferred delivery date.",exz:"請明確指出您希望的送達日期。"},
+  {w:"sponsor",pos:"n./v.",m:"贊助；贊助商",ex:"The event was sponsored by a local business.",exz:"這場活動由一家當地企業贊助。"},
+  {w:"stipulate",pos:"v.",m:"明訂；規定",ex:"The contract stipulates a 30-day notice period.",exz:"合約中明訂了三十天的通知期。"},
+  {w:"subsidiary",pos:"n.",m:"子公司",ex:"The firm operates as a subsidiary of a larger corporation.",exz:"這間公司是一家大企業的子公司。"},
+  {w:"substantial",pos:"adj.",m:"大量的；重大的",ex:"The renovation required a substantial investment.",exz:"這項翻修需要大量的投資。"},
+  {w:"supervise",pos:"v.",m:"監督；督導",ex:"He supervises a team of ten employees.",exz:"他督導一個十人的團隊。"},
+  {w:"surplus",pos:"n.",m:"盈餘；剩餘",ex:"The company reported a budget surplus this year.",exz:"這家公司今年通報有預算盈餘。"},
+  {w:"suspend",pos:"v.",m:"暫停",ex:"Flights were suspended due to the storm.",exz:"班機因暴風雨而暫停。"},
+  {w:"sustain",pos:"v.",m:"維持；支撐",ex:"The economy sustained steady growth last quarter.",exz:"經濟在上一季維持穩定成長。"},
+  {w:"tenant",pos:"n.",m:"房客；承租人",ex:"The building has over fifty tenants.",exz:"這棟大樓有超過五十位房客。"},
+  {w:"terminate",pos:"v.",m:"終止",ex:"The contract can be terminated with 60 days' notice.",exz:"合約可經六十天前通知後終止。"},
+  {w:"thorough",pos:"adj.",m:"徹底的；周全的",ex:"The inspector did a thorough review of the site.",exz:"檢查員對現場進行了徹底的檢視。"},
+  {w:"transaction",pos:"n.",m:"交易",ex:"All transactions are recorded in the system.",exz:"所有交易都會記錄在系統中。"},
+  {w:"transfer",pos:"v./n.",m:"轉移；調職",ex:"She was transferred to the London office.",exz:"她被調到了倫敦辦公室。"},
+  {w:"unanimous",pos:"adj.",m:"全體一致的",ex:"The board reached a unanimous decision.",exz:"董事會做出了全體一致的決議。"},
+  {w:"undergo",pos:"v.",m:"經歷；經受",ex:"The building will undergo major renovations.",exz:"這棟建築將進行大規模翻修。"},
+  {w:"utilize",pos:"v.",m:"利用",ex:"Employees are encouraged to utilize the new software.",exz:"員工被鼓勵多加利用這套新軟體。"},
+  {w:"vacant",pos:"adj.",m:"空缺的；空的",ex:"There are two vacant positions in the department.",exz:"這個部門有兩個職位空缺。"},
+  {w:"valid",pos:"adj.",m:"有效的",ex:"Your ticket is valid for one year from purchase.",exz:"你的票券自購買日起一年內有效。"},
+  {w:"venue",pos:"n.",m:"場地；地點",ex:"The conference venue has been changed to the city hall.",exz:"研討會的場地已改為市政廳。"},
+  {w:"verify",pos:"v.",m:"驗證；查核",ex:"Please verify your email address to continue.",exz:"請驗證您的電子郵件地址以繼續。"},
+  {w:"viable",pos:"adj.",m:"可行的",ex:"They are exploring a viable alternative solution.",exz:"他們正在探索一個可行的替代方案。"},
+  {w:"vicinity",pos:"n.",m:"附近；周邊地區",ex:"There are several restaurants in the vicinity of the hotel.",exz:"飯店附近有好幾家餐廳。"},
+  {w:"warehouse",pos:"n.",m:"倉庫",ex:"The goods are stored in a warehouse near the port.",exz:"貨物存放在港口附近的倉庫裡。"},
+  {w:"warranty",pos:"n.",m:"保固；保證書",ex:"The laptop comes with a one-year warranty.",exz:"這台筆電附有一年保固。"},
+  {w:"withhold",pos:"v.",m:"扣留；保留",ex:"The employer withheld part of the payment.",exz:"雇主扣留了部分款項。"},
+  {w:"workforce",pos:"n.",m:"勞動力；員工",ex:"The company plans to expand its workforce next year.",exz:"公司計畫明年擴大員工規模。"},
+  {w:"yield",pos:"v./n.",m:"產出；收益",ex:"The investment is expected to yield high returns.",exz:"這項投資預期會有高報酬。"}
+];
+
+// ==================== constants ====================
+const SKILLS = {
+  listening: { label: "聽力", color: "#5C8A83" },
+  speaking:  { label: "口說", color: "#BE6248" },
+  reading:   { label: "閱讀", color: "#8A9A5B" },
+  vocab:     { label: "單字", color: "#C99A44" },
+  toeic:     { label: "多益／檢定", color: "#6B5B7B" }
+};
+const SKILL_KEYS = Object.keys(SKILLS);
+const GOAL_SKILL_KEYS = ["listening","speaking","reading","vocab"]; // toeic handled separately
+
+// ==================== helpers ====================
+const todayStr = () => new Date().toISOString().slice(0, 10);
+const daysAgoStr = (n) => { const d = new Date(); d.setDate(d.getDate() - n); return d.toISOString().slice(0, 10); };
+const dateDiffDays = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000);
+const uid = () => Math.random().toString(36).slice(2, 10);
+const escapeHtml = (str) => { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; };
+
+function dayOfYear(d) {
+  const start = new Date(d.getFullYear(), 0, 0);
+  const diff = d - start;
+  return Math.floor(diff / 86400000);
+}
+
+function duckSvg(size) {
+  return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" fill="none">
+    <filter id="washBlur"><feGaussianBlur stdDeviation="4"/></filter>
+    <ellipse cx="52" cy="55" rx="38" ry="30" fill="#C99A44" opacity="0.22" filter="url(#washBlur)"/>
+    <g fill="none" stroke="#3B362E" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round">
+      <path d="M18 66 Q20 40 50 38 Q78 36 84 52 Q88 62 78 70 Q60 82 34 78 Q18 74 18 66 Z"/>
+      <path d="M62 30 A16 16 0 1 1 61.9 30.1 Z"/>
+      <path d="M74 34 Q88 34 90 42 Q88 48 74 46 Z" fill="#BE6248" fill-opacity="0.85" stroke="#BE6248"/>
+      <path d="M40 58 Q54 50 62 62 Q50 68 40 58 Z" stroke-opacity="0.55"/>
+    </g>
+    <circle cx="68" cy="27" r="2.4" fill="#3B362E"/>
+  </svg>`;
+}
+
+function lilySvg(filled, isToday) {
+  const fill = filled ? '#8A9A5B' : '#DCD3BE';
+  const line = filled ? '#6E8449' : '#C9BE9F';
+  return `<div class="lily-wrap">
+    <svg width="36" height="36" viewBox="0 0 36 36">
+      <circle cx="18" cy="18" r="13" stroke="${line}" stroke-opacity="0.5" fill="none" />
+      <path d="M18 20 C10 20 6 15 8 8 C14 6 22 8 26 14 C28 20 24 24 18 20 Z" fill="${fill}" stroke="${line}" stroke-width="1.2"/>
+      <path d="M18 20 L26 12" stroke="${line}" stroke-width="1.2" fill="none"/>
+    </svg>
+    ${isToday ? `<div class="lily-duck">${duckSvg(28)}</div>` : ''}
+  </div>`;
+}
+
+// ==================== storage ====================
+function loadJSON(key, fallback) {
+  try { const v = localStorage.getItem(key); return v ? JSON.parse(v) : fallback; }
+  catch (e) { console.error('load error', key, e); return fallback; }
+}
+function saveJSON(key, value) {
+  try { localStorage.setItem(key, JSON.stringify(value)); return true; }
+  catch (e) { console.error('save error', key, e); document.getElementById('saveWarning').style.display = 'block'; return false; }
+}
+
+const DEFAULT_GOALS = { listening: 90, speaking: 60, reading: 60, vocab: 30, toeicScore: 800, toeicDate: "" };
+
+let state = {
+  entries: loadJSON('duckEntries', []),
+  exploreItems: loadJSON('duckExploreItems', []),
+  goals: Object.assign({}, DEFAULT_GOALS, loadJSON('duckGoals', {}))
+};
+
+let skillChartInstance = null;
+let trendChartInstance = null;
+let selectedEntrySkills = [];
+let selectedExploreCategory = 'listening';
+
+// ==================== stats ====================
+function computeStats(entries) {
+  const today = todayStr();
+  const weekStart = daysAgoStr(6);
+  const prevWeekStart = daysAgoStr(13);
+  const prevWeekEnd = daysAgoStr(7);
+
+  const thisWeek = entries.filter(e => e.date >= weekStart && e.date <= today);
+  const lastWeek = entries.filter(e => e.date >= prevWeekStart && e.date <= prevWeekEnd);
+  const sumMinutes = (list) => list.reduce((s, e) => s + Number(e.minutes || 0), 0);
+  const totalThisWeek = sumMinutes(thisWeek);
+  const totalLastWeek = sumMinutes(lastWeek);
+
+  const skillMinutesWeek = {};
+  SKILL_KEYS.forEach(k => skillMinutesWeek[k] = 0);
+  thisWeek.forEach(e => {
+    const list = e.skills && e.skills.length ? e.skills : [];
+    const share = list.length ? Number(e.minutes || 0) / list.length : 0;
+    list.forEach(k => { if (skillMinutesWeek[k] !== undefined) skillMinutesWeek[k] += share; });
+  });
+
+  const lastPracticed = {};
+  SKILL_KEYS.forEach(k => {
+    const withSkill = entries.filter(e => e.skills && e.skills.includes(k));
+    if (withSkill.length) lastPracticed[k] = withSkill.reduce((latest, e) => e.date > latest ? e.date : latest, withSkill[0].date);
+  });
+
+  const dateSet = new Set(entries.map(e => e.date));
+  let streak = 0;
+  let cursor = today;
+  if (!dateSet.has(today)) cursor = daysAgoStr(1);
+  while (dateSet.has(cursor)) {
+    streak += 1;
+    const d = new Date(cursor); d.setDate(d.getDate() - 1);
+    cursor = d.toISOString().slice(0, 10);
+  }
+
+  const pond = [];
+  for (let i = 13; i >= 0; i--) { const d = daysAgoStr(i); pond.push({ date: d, filled: dateSet.has(d), isToday: d === today }); }
+
+  const dailyTrend = [];
+  for (let i = 13; i >= 0; i--) { const d = daysAgoStr(i); const mins = sumMinutes(entries.filter(e => e.date === d)); dailyTrend.push({ date: d.slice(5), minutes: Math.round(mins) }); }
+
+  const totalVocab = entries.reduce((s, e) => s + Number(e.vocabCount || 0), 0);
+  const vocabThisWeek = thisWeek.reduce((s, e) => s + Number(e.vocabCount || 0), 0);
+  const vocabLastWeek = lastWeek.reduce((s, e) => s + Number(e.vocabCount || 0), 0);
+
+  return { totalThisWeek, totalLastWeek, skillMinutesWeek, lastPracticed, streak, pond, dailyTrend, today, totalVocab, vocabThisWeek, vocabLastWeek };
+}
+
+function computeSuggestions(entries, stats, goals) {
+  const out = [];
+  if (entries.length === 0) return ["歡迎！先從一筆學習紀錄開始吧，哪怕只有 10 分鐘也算數。"];
+
+  GOAL_SKILL_KEYS.forEach(k => {
+    const last = stats.lastPracticed[k];
+    if (last) {
+      const idle = dateDiffDays(last, stats.today);
+      if (idle >= 7) out.push(`已經 ${idle} 天沒練習「${SKILLS[k].label}」了，安排一次複習吧。`);
+    }
+  });
+
+  if (stats.totalLastWeek > 0) {
+    const change = (stats.totalThisWeek - stats.totalLastWeek) / stats.totalLastWeek;
+    if (change <= -0.3) out.push(`本週學習時數比上週少了約 ${Math.round(Math.abs(change) * 100)}%，要不要抓回一點節奏？`);
+    else if (change >= 0.3) out.push(`本週學習時數比上週多了約 ${Math.round(change * 100)}%，保持得很好！`);
+  }
+
+  const weekTotal = Object.values(stats.skillMinutesWeek).reduce((a, b) => a + b, 0);
+  if (weekTotal > 0) {
+    GOAL_SKILL_KEYS.forEach(k => {
+      const ratio = stats.skillMinutesWeek[k] / weekTotal;
+      if (ratio >= 0.6) out.push(`「${SKILLS[k].label}」佔本週練習比例偏高，可以分一些時間給其他技能。`);
+    });
+  }
+
+  GOAL_SKILL_KEYS.forEach(k => {
+    const goal = Number(goals[k] || 0);
+    if (goal > 0) {
+      const actual = stats.skillMinutesWeek[k];
+      if (actual < goal * 0.5) out.push(`「${SKILLS[k].label}」本週只完成目標的 ${Math.round((actual / goal) * 100)}%，還有機會追上。`);
+    }
+  });
+
+  if (goals.toeicDate) {
+    const days = dateDiffDays(stats.today, goals.toeicDate);
+    if (days >= 0 && days <= 14) {
+      const toeicMinutes = stats.skillMinutesWeek.toeic || 0;
+      if (toeicMinutes < 60) out.push(`距離多益考試剩下 ${days} 天，本週的準備時間還不多，抓緊時間衝刺一下。`);
+    }
+  }
+
+  if (stats.streak === 0 && entries.length > 0) out.push("已經有一陣子沒打卡了，今天重新開始也沒關係。");
+  if (out.length === 0) out.push("目前的節奏很平均，繼續保持。");
+  return out;
+}
+
+// ==================== render ====================
+function render() {
+  const { entries, exploreItems, goals } = state;
+  const stats = computeStats(entries);
+  const suggestions = computeSuggestions(entries, stats, goals);
+
+  document.getElementById('mascotHeader').innerHTML = duckSvg(46);
+  document.getElementById('streakText').textContent = `連續學習 ${stats.streak} 天`;
+  document.getElementById('pondRow').innerHTML = stats.pond.map(p => lilySvg(p.filled, p.isToday)).join('');
+  document.getElementById('statWeekMinutes').textContent = Math.round(stats.totalThisWeek);
+  document.getElementById('statEntryCount').textContent = entries.length;
+  document.getElementById('statVocabCount').textContent = stats.totalVocab;
+  document.getElementById('suggestList').innerHTML = suggestions.map(s => `<li>${escapeHtml(s)}</li>`).join('');
+
+  renderWordCard();
+  renderGoalBars(stats, goals);
+  renderToeicCard(stats, goals);
+  renderCharts(stats);
+  renderEntryList(entries);
+  renderExploreList(exploreItems);
+}
+
+function renderWordCard() {
+  const idx = dayOfYear(new Date()) % VOCAB_BANK.length;
+  const w = VOCAB_BANK[idx];
+  document.getElementById('wordCard').innerHTML = `
+    <div class="word-main">
+      <div class="word-eyebrow">今日單字</div>
+      <div class="word-title">${escapeHtml(w.w)}</div>
+      <span class="word-pos">${escapeHtml(w.pos)}</span><span class="word-meaning">${escapeHtml(w.m)}</span>
+      <p class="word-example">“${escapeHtml(w.ex)}”</p>
+      <p class="word-example-zh">${escapeHtml(w.exz)}</p>
+    </div>
+  `;
+}
+
+function renderGoalBars(stats, goals) {
+  const el = document.getElementById('goalBars');
+  el.innerHTML = GOAL_SKILL_KEYS.map(k => {
+    const goal = Number(goals[k] || 0);
+    const actual = Math.round(stats.skillMinutesWeek[k]);
+    const pct = goal > 0 ? Math.min(100, Math.round((actual / goal) * 100)) : 0;
+    return `
+      <div class="goal-row">
+        <span class="goal-label">${SKILLS[k].label}</span>
+        <div class="goal-track"><div class="goal-fill" style="width:${pct}%; background:${SKILLS[k].color}"></div></div>
+        <span class="goal-value">${actual} / ${goal || '—'} 分</span>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderToeicCard(stats, goals) {
+  const el = document.getElementById('toeicCard');
+  let daysHtml = '';
+  if (goals.toeicDate) {
+    const days = dateDiffDays(stats.today, goals.toeicDate);
+    daysHtml = `<div class="toeic-days">${days >= 0 ? days : 0}</div><div class="toeic-days-label">${days >= 0 ? '天後應考' : '考試日已過'}</div>`;
+  } else {
+    daysHtml = `<div class="toeic-days-label">尚未設定應考日期</div>`;
+  }
+  const toeicMinutes = Math.round(stats.skillMinutesWeek.toeic || 0);
+  el.innerHTML = `
+    <div class="toeic-left">
+      <h3>多益備考</h3>
+      <p>目標分數：${goals.toeicScore || '—'} 分</p>
+      <p>本週準備時間：${toeicMinutes} 分鐘</p>
+    </div>
+    <div class="toeic-right">${daysHtml}</div>
+  `;
+}
+
+function renderCharts(stats) {
+  const skillLabels = SKILL_KEYS.map(k => SKILLS[k].label);
+  const skillData = SKILL_KEYS.map(k => Math.round(stats.skillMinutesWeek[k]));
+  const skillColors = SKILL_KEYS.map(k => SKILLS[k].color);
+
+  const skillCtx = document.getElementById('skillChart');
+  if (skillChartInstance) skillChartInstance.destroy();
+  skillChartInstance = new Chart(skillCtx, {
+    type: 'bar',
+    data: { labels: skillLabels, datasets: [{ data: skillData, backgroundColor: skillColors, borderRadius: 8 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { family: 'Work Sans' } } } } }
+  });
+
+  const trendCtx = document.getElementById('trendChart');
+  if (trendChartInstance) trendChartInstance.destroy();
+  trendChartInstance = new Chart(trendCtx, {
+    type: 'line',
+    data: { labels: stats.dailyTrend.map(d => d.date), datasets: [{ data: stats.dailyTrend.map(d => d.minutes), borderColor: '#BE6248', backgroundColor: 'rgba(190,98,72,0.12)', fill: true, tension: 0.35, pointBackgroundColor: '#BE6248' }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { display: false }, x: { grid: { display: false }, ticks: { font: { family: 'Work Sans' } } } } }
+  });
+}
+
+function renderEntryList(entries) {
+  const el = document.getElementById('entryList');
+  if (entries.length === 0) { el.innerHTML = '<p class="empty-hint">還沒有紀錄，開始寫下今天學了什麼吧。</p>'; return; }
+  const sorted = entries.slice().sort((a, b) => a.date < b.date ? 1 : -1);
+  el.innerHTML = sorted.map(e => `
+    <div class="card entry-item" data-id="${e.id}">
+      <div class="entry-item-top">
+        <span class="entry-date">${e.date}</span>
+        <span class="entry-minutes">${e.minutes} 分鐘</span>
+        <button class="entry-delete" data-action="delete-entry" data-id="${e.id}">🗑</button>
+      </div>
+      <div class="entry-skills">
+        ${(e.skills || []).map(k => `<span class="skill-chip" style="background:${SKILLS[k].color}">${SKILLS[k].label}</span>`).join('')}
+      </div>
+      ${e.vocabCount ? `<p class="entry-vocab">背了 ${e.vocabCount} 個單字</p>` : ''}
+      ${e.note ? `<p class="entry-note">${escapeHtml(e.note)}</p>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderExploreList(items) {
+  const el = document.getElementById('exploreList');
+  if (items.length === 0) { el.innerHTML = '<p class="empty-hint">目前沒有探索中的項目。</p>'; return; }
+  el.innerHTML = items.map(item => `
+    <div class="card explore-item" data-id="${item.id}">
+      <div class="explore-item-top">
+        <span class="skill-chip" style="background:${(SKILLS[item.category] || {}).color || '#B9C6C0'}">${(SKILLS[item.category] || {}).label || '其他'}</span>
+        <button class="entry-delete" data-action="delete-explore" data-id="${item.id}">🗑</button>
+      </div>
+      <h4>${escapeHtml(item.name)}</h4>
+      ${item.note ? `<p>${escapeHtml(item.note)}</p>` : ''}
+    </div>
+  `).join('');
+}
+
+function renderChipSelect(containerId, mode) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = SKILL_KEYS.map(k => {
+    const selected = mode === 'multi' ? selectedEntrySkills.includes(k) : selectedExploreCategory === k;
+    return `<button type="button" class="chip-option${selected ? ' selected' : ''}" data-key="${k}" style="${selected ? `background:${SKILLS[k].color};border-color:${SKILLS[k].color}` : ''}">${SKILLS[k].label}</button>`;
+  }).join('');
+}
+
+// ==================== tabs ====================
+document.querySelectorAll('.duck-tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.duck-tabs button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).classList.add('active');
+  });
+});
+
+// ==================== entry form ====================
+document.getElementById('openEntryForm').addEventListener('click', () => {
+  selectedEntrySkills = [];
+  document.getElementById('entryDate').value = todayStr();
+  document.getElementById('entryDate').max = todayStr();
+  document.getElementById('entryMinutes').value = 20;
+  document.getElementById('entryVocabCount').value = 0;
+  document.getElementById('vocabCountWrap').style.display = 'none';
+  document.getElementById('entryNote').value = '';
+  document.getElementById('entryHint').style.display = 'none';
+  renderChipSelect('entrySkillChips', 'multi');
+  document.getElementById('entryForm').classList.remove('hidden');
+});
+document.getElementById('closeEntryForm').addEventListener('click', () => document.getElementById('entryForm').classList.add('hidden'));
+document.getElementById('cancelEntry').addEventListener('click', () => document.getElementById('entryForm').classList.add('hidden'));
+
+document.getElementById('entrySkillChips').addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip-option');
+  if (!btn) return;
+  const k = btn.dataset.key;
+  const idx = selectedEntrySkills.indexOf(k);
+  if (idx >= 0) selectedEntrySkills.splice(idx, 1); else selectedEntrySkills.push(k);
+  renderChipSelect('entrySkillChips', 'multi');
+  document.getElementById('vocabCountWrap').style.display = selectedEntrySkills.includes('vocab') ? 'flex' : 'none';
+});
+
+document.getElementById('submitEntry').addEventListener('click', () => {
+  if (selectedEntrySkills.length === 0) { document.getElementById('entryHint').style.display = 'block'; return; }
+  const entry = {
+    id: uid(),
+    date: document.getElementById('entryDate').value || todayStr(),
+    skills: [...selectedEntrySkills],
+    minutes: Number(document.getElementById('entryMinutes').value) || 0,
+    vocabCount: selectedEntrySkills.includes('vocab') ? (Number(document.getElementById('entryVocabCount').value) || 0) : 0,
+    note: document.getElementById('entryNote').value.trim()
+  };
+  state.entries = [entry, ...state.entries];
+  saveJSON('duckEntries', state.entries);
+  document.getElementById('entryForm').classList.add('hidden');
+  render();
+});
+
+document.getElementById('entryList').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-entry"]');
+  if (!btn) return;
+  state.entries = state.entries.filter(x => x.id !== btn.dataset.id);
+  saveJSON('duckEntries', state.entries);
+  render();
+});
+
+// ==================== explore form ====================
+document.getElementById('openExploreForm').addEventListener('click', () => {
+  selectedExploreCategory = 'listening';
+  document.getElementById('exploreName').value = '';
+  document.getElementById('exploreNote').value = '';
+  renderChipSelect('exploreCategoryChips', 'single');
+  document.getElementById('exploreForm').classList.remove('hidden');
+});
+document.getElementById('closeExploreForm').addEventListener('click', () => document.getElementById('exploreForm').classList.add('hidden'));
+document.getElementById('cancelExplore').addEventListener('click', () => document.getElementById('exploreForm').classList.add('hidden'));
+
+document.getElementById('exploreCategoryChips').addEventListener('click', (e) => {
+  const btn = e.target.closest('.chip-option');
+  if (!btn) return;
+  selectedExploreCategory = btn.dataset.key;
+  renderChipSelect('exploreCategoryChips', 'single');
+});
+
+document.getElementById('submitExplore').addEventListener('click', () => {
+  const name = document.getElementById('exploreName').value.trim();
+  if (!name) return;
+  const item = { id: uid(), category: selectedExploreCategory, name, note: document.getElementById('exploreNote').value.trim() };
+  state.exploreItems = [item, ...state.exploreItems];
+  saveJSON('duckExploreItems', state.exploreItems);
+  document.getElementById('exploreForm').classList.add('hidden');
+  render();
+});
+
+document.getElementById('exploreList').addEventListener('click', (e) => {
+  const btn = e.target.closest('[data-action="delete-explore"]');
+  if (!btn) return;
+  state.exploreItems = state.exploreItems.filter(x => x.id !== btn.dataset.id);
+  saveJSON('duckExploreItems', state.exploreItems);
+  render();
+});
+
+// ==================== goal form ====================
+function buildGoalFormFields() {
+  const el = document.getElementById('goalFormFields');
+  el.innerHTML = GOAL_SKILL_KEYS.map(k => `
+    <label>${SKILLS[k].label}週目標（分鐘）
+      <input type="number" min="0" step="10" id="goalInput_${k}" value="${state.goals[k] || 0}" />
+    </label>
+  `).join('');
+}
+
+document.getElementById('openGoalForm').addEventListener('click', () => {
+  buildGoalFormFields();
+  document.getElementById('goalToeicScore').value = state.goals.toeicScore || '';
+  document.getElementById('goalToeicDate').value = state.goals.toeicDate || '';
+  document.getElementById('goalForm').classList.remove('hidden');
+});
+document.getElementById('closeGoalForm').addEventListener('click', () => document.getElementById('goalForm').classList.add('hidden'));
+document.getElementById('cancelGoals').addEventListener('click', () => document.getElementById('goalForm').classList.add('hidden'));
+
+document.getElementById('submitGoals').addEventListener('click', () => {
+  const newGoals = { ...state.goals };
+  GOAL_SKILL_KEYS.forEach(k => { newGoals[k] = Number(document.getElementById(`goalInput_${k}`).value) || 0; });
+  newGoals.toeicScore = Number(document.getElementById('goalToeicScore').value) || 0;
+  newGoals.toeicDate = document.getElementById('goalToeicDate').value || "";
+  state.goals = newGoals;
+  saveJSON('duckGoals', state.goals);
+  document.getElementById('goalForm').classList.add('hidden');
+  render();
+});
+
+// ==================== init ====================
+render();
+</script>
+</body>
+</html>
